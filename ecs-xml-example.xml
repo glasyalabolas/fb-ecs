@@ -1,0 +1,5 @@
+<entity name="player">
+  <position x="3" y="4"/>
+  <size w="30" h="40"/>
+  <appearance color="blue"/>
+</entity>
