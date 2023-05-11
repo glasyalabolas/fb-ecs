@@ -40,7 +40,8 @@ type Components extends Object
     declare operator []( as ComponentID ) as any ptr
     declare operator []( as string ) as any ptr
     
-    declare function register( as string, as uinteger ) as long
+    declare function register( as string, as uinteger ) as ComponentID
+    declare function register( as string ) as ComponentID
     declare function find( as string ) as ComponentID
     declare function getName( as ComponentID ) as string
     declare function getComponent( as Entity, as ComponentID ) as any ptr
@@ -120,6 +121,46 @@ function Components.register( n as string, s as uinteger ) as ComponentID
   end if
   
   return( -1 )
+end function
+
+/'
+  This method registers a 'null component' that can be added to entities
+  but it shouldn't be indexed as a normal one.
+  
+  Why use it, then? Turns out that an ECS architecture doesn't have the
+  concept of 'types', so systems will happily process any entity that has
+  the required components.
+  Certain systems (such as the ones that do rendering), this is important,
+  as they frequently operate on entities that need the same set of
+  components, but you have no way to discriminate them. This means that
+  you might end up with two rendering systems that require the same
+  components to render different things, and the net result is that *both*
+  systems will render, say, a player *and* an enemy to the same entity.
+  
+  This way you can register void components that act as 'types' of sorts,
+  and have the systems that should apply to specific sets of components
+  require them:
+  
+  myComponentsInstance.register( "type:player" )
+  myComponentsInstance.register( "type:enemy" )
+  
+  constructor PlayerRenderingSystem()
+    requires( "type:player" )
+    ...
+  end constructor
+  
+  constructor EnemyRenderingSystem()
+    requires( "type:enemy" )
+    ...
+  end constructor
+  
+  You can also use them as 'flag' components, without implementing a
+  proper boolean component. These components can be added, and removed
+  as usual, but not checked nor indexed as regular components.
+  Components declared in this way allocate no memory.
+'/
+function Components.register( n as string ) as ComponentID
+  return( register( n, 0 ) )
 end function
 
 function Components.getComponent( e as Entity, c as ComponentID ) as any ptr

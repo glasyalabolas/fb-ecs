@@ -9,7 +9,7 @@ type System extends Object
     
     declare property processed() byref as UnorderedList
     
-    declare abstract sub process()
+    declare abstract sub process( as double = 0.0d )
     
   protected:
     declare constructor()
