@@ -1,5 +1,5 @@
 #include once "fbgame/fb-game.bi"
-#include once "ECS/fb-ecs.bi"
+#include once "../fb-ecs.bi"
 
 Debug.toConsole()
 
