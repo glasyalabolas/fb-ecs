@@ -5,7 +5,7 @@ Debug.toConsole()
 
 '' Experimental syntax
 #macro withComponent( _c_, _p_ )
-  with *cast( _c_ ptr, _p_ )
+  with ( *cast( _c_ ptr, _p_ ) )
 #endmacro
 
 #define asComponent( _c_, _p_ ) ( *cast( _c_ ptr, _p_ ) )
@@ -474,10 +474,6 @@ do
     cls()
       r.process()
       ar.process()
-      ? "Controllable is processing: " & ctrl.processed.count & " entities."
-      ? "Movable is processing: " & m.processed.count & " entities."
-      ? "Rendering is processing: " & r.processed.count & " entities."
-      ? "Asteroid rendering is processing: " & ar.processed.count & " entities."
     flip()
     
     sleep( 1, 1 )
