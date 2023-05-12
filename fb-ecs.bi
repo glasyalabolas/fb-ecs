@@ -18,5 +18,7 @@
     - Implement serializing to/from XML for easy debugging and data-drive entity
       and component creation
     X Check that systems receive the correct events from the correct components
+    - Replace the System.isProcessed() method by a simple lookup into a boolean
+      array.
 '/   
 #endif
