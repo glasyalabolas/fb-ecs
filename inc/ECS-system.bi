@@ -31,9 +31,10 @@ type System extends Object
     
     declare function isRequired( as ComponentID ) as boolean
     declare function hasRequiredComponents( as Entity ) as boolean
-    declare function isProcessed( as Entity ) as boolean
     
     as ComponentID _required( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
+    as boolean _isProcessed( 0 to ECS_MAX_ENTITIES - 1 )
+    
     as UnorderedList _processed
     as Entities ptr _entities
     as Components ptr _components
@@ -58,6 +59,7 @@ destructor System()
   ECS.unregisterListener( EV_COMPONENTREMOVED, toHandler( System.system_componentRemoved ), @this )
   
   erase( _required )
+  erase( _isProcessed )
 end destructor
 
 property System.processed() byref as UnorderedList
@@ -103,14 +105,6 @@ function System.hasRequiredComponents( e as Entity ) as boolean
   return( result )
 end function
 
-function System.isProcessed( e as Entity ) as boolean
-  for i as integer = 0 to _processed.count - 1
-    if( _processed[ i ] = e ) then return( true )
-  next
-  
-  return( false )
-end function
-
 sub System.system_entityDestroyed( _
   sender as any ptr, e as EntityChangedEventArgs, receiver as System ptr )
   
@@ -127,7 +121,8 @@ sub System.system_componentAdded( _
   sender as any ptr, e as ComponentChangedEventArgs, receiver as System ptr )
   
   if( sender = receiver->_components ) then
-    if( receiver->hasRequiredComponents( e.eID ) andAlso not receiver->isProcessed( e.eID ) ) then
+    if( receiver->hasRequiredComponents( e.eID ) andAlso not receiver->_isProcessed( e.eID ) ) then
+      receiver->_isProcessed( e.eID ) = true
       receiver->_processed.add( e.eID )
     end if
   end if
@@ -137,7 +132,8 @@ sub System.system_componentRemoved( _
   sender as any ptr, e as ComponentChangedEventArgs, receiver as System ptr )
   
   if( sender = receiver->_components ) then
-    if( receiver->isRequired( e.cID ) andAlso receiver->isProcessed( e.eID ) ) then
+    if( receiver->isRequired( e.cID ) andAlso receiver->_isProcessed( e.eID ) ) then
+      receiver->_isProcessed( e.eID ) = false
       receiver->_processed.remove( receiver->_processed.find( e.eID ) )
     end if
   end if
