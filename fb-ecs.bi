@@ -10,9 +10,6 @@
 #include once "inc/ECS-system.bi"
 
 /'
-  IMPORTANT: the range of usable entities is from 1 to MAX_ENTITIES - 1. This is
-    because entities start numbering at 1 when you create them.
-  
   TODO:
     - Save and load states for components and entities
     - Implement serializing to/from XML for easy debugging and data-drive entity
