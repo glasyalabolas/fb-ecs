@@ -114,26 +114,32 @@ end function
 sub System.system_entityDestroyed( _
   sender as any ptr, e as EntityChangedEventArgs, receiver as System ptr )
   
-  var index = receiver->_processed.find( e.eID )
-  
-  if( index <> -1 ) then
-    receiver->_processed.remove( index )
+  if( sender = receiver->_entities ) then
+    var index = receiver->_processed.find( e.eID )
+    
+    if( index <> -1 ) then
+      receiver->_processed.remove( index )
+    end if
   end if
 end sub
 
 sub System.system_componentAdded( _
   sender as any ptr, e as ComponentChangedEventArgs, receiver as System ptr )
   
-  if( receiver->hasRequiredComponents( e.eID ) ) then
-    receiver->_processed.add( e.eID )
+  if( sender = receiver->_components ) then
+    if( receiver->hasRequiredComponents( e.eID ) andAlso not receiver->isProcessed( e.eID ) ) then
+      receiver->_processed.add( e.eID )
+    end if
   end if
 end sub
 
 sub System.system_componentRemoved( _
   sender as any ptr, e as ComponentChangedEventArgs, receiver as System ptr )
   
-  if( receiver->isProcessed( e.eID ) andAlso receiver->isRequired( e.cID ) ) then
-    receiver->_processed.remove( receiver->_processed.find( e.eID ) )
+  if( sender = receiver->_components ) then
+    if( receiver->isRequired( e.cID ) andAlso receiver->isProcessed( e.eID ) ) then
+      receiver->_processed.remove( receiver->_processed.find( e.eID ) )
+    end if
   end if
 end sub
 

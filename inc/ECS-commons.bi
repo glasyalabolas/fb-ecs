@@ -1,12 +1,14 @@
 #ifndef __ECS_COMMONS__
 #define __ECS_COMMONS__
 
-const as long ECS_MAX_ENTITIES = 1000
-const as long ECS_MAX_COMPONENTS = 50
+const as long ECS_MAX_ENTITIES = 500
+const as long ECS_MAX_COMPONENTS = 200
 const as long ECS_MAX_COMPONENTS_PER_ENTITY = 32
 
 type as long Entity
 type as long ECS_EVENT
+type as long ComponentID
+type as string DATA_BUFFER
 
 function hash_32( x as ulong ) as ulong
   x = ( ( x shr 16 ) xor x ) * &h45d9f3b

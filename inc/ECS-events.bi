@@ -173,4 +173,25 @@ sub Events.raise( eID as EventID, p as EventArgs, sender as any ptr = 0 )
   end if
 end sub
 
+type EntityChangedEventArgs extends EventArgs
+  declare constructor( as Entity )
+  
+  as Entity eID
+end type
+
+constructor EntityChangedEventArgs( e as Entity )
+  eID = e
+end constructor
+
+type ComponentChangedEventArgs extends EventArgs
+  declare constructor( as Entity, as ComponentID )
+  
+  as Entity eID
+  as ComponentID cID
+end type
+
+constructor ComponentChangedEventArgs( e as Entity, c as ComponentID )
+  eID = e : cID = c
+end constructor
+
 #endif

@@ -1,8 +1,8 @@
 #ifndef __ECS_COMPONENTS__
 #define __ECS_COMPONENTS__
 
-type as string DATA_BUFFER
-type as long ComponentID
+const as long INVALID_COMPONENT = -1
+const as long COMPONENT_NOT_FOUND = -2
 
 type ComponentTableEntry
   as string name
@@ -11,17 +11,6 @@ type ComponentTableEntry
   as long idx
   as uinteger size
 end type
-
-type ComponentChangedEventArgs extends EventArgs
-  declare constructor( as Entity, as ComponentID )
-  
-  as Entity eID
-  as ComponentID cID
-end type
-
-constructor ComponentChangedEventArgs( e as Entity, c as ComponentID )
-  eID = e : cID = c
-end constructor
 
 /'
   Component map
@@ -58,11 +47,13 @@ type Components extends Object
     as long _index( 0 to ECS_MAX_COMPONENTS - 1 )
     as long _count
     as boolean _componentMap( 0 to ECS_MAX_ENTITIES - 1, 0 to ECS_MAX_COMPONENTS - 1 )
+    as long _componentTable( 0 to ECS_MAX_ENTITIES - 1, 0 to ECS_MAX_COMPONENTS - 1 )
+    as long _componentCount( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
 end type
 
 constructor Components()
   for i as integer = 0 to ECS_MAX_COMPONENTS - 1
-    _index( i ) = -1
+    _index( i ) = INVALID_COMPONENT
   next
 end constructor
 
@@ -70,6 +61,8 @@ destructor Components()
   erase( _components )
   erase( _index )
   erase( _componentMap )
+  erase( _componentTable )
+  erase( _componentCount )
 end destructor
 
 operator Components.[]( id as ComponentID ) as any ptr
@@ -94,7 +87,7 @@ function Components.find( k as string ) as ComponentID
     current = _components( current ).idx
   loop
   
-  return( -1 )
+  return( COMPONENT_NOT_FOUND )
 end function
 
 function Components.getName( c as ComponentID ) as string
@@ -103,24 +96,26 @@ end function
 
 function Components.register( n as string, s as uinteger ) as ComponentID
   if( _count < ECS_MAX_COMPONENTS ) then
-    dim as long id = _count
-    dim as ulong h = hashstr( n ) mod ECS_MAX_COMPONENTS
+    if( _count > 0 andAlso find( n ) <> COMPONENT_NOT_FOUND ) then return INVALID_COMPONENT
     
-    with _components( _count )
-      .idx = _index( h )
-      .id = id
-      .name = n
-      .value = string( s * ECS_MAX_ENTITIES, chr( 0 ) )
-      .size = s
-    end with
-    
-    _index( h ) = id
-    _count += 1
-    
-    return( id )
+      dim as long id = _count
+      dim as ulong h = hashstr( n ) mod ECS_MAX_COMPONENTS
+      
+      with _components( _count )
+        .idx = _index( h )
+        .id = id
+        .name = n
+        .value = string( s * ECS_MAX_ENTITIES, chr( 0 ) )
+        .size = s
+      end with
+      
+      _index( h ) = id
+      _count += 1
+      
+      return( id )
   end if
   
-  return( -1 )
+  return( INVALID_COMPONENT )
 end function
 
 /'
@@ -174,7 +169,10 @@ end function
 function Components.addComponent( e as Entity, c as ComponentID ) as any ptr
   if( _componentMap( e, c ) = false ) then
     _componentMap( e, c ) = true
-    ECS.raiseEvent( EV_COMPONENTADDED, ComponentChangedEventArgs( e, c ) )
+    _componentTable( e, _componentCount( e ) ) = c
+    _componentCount( e ) += 1
+    
+    ECS.raiseEvent( EV_COMPONENTADDED, ComponentChangedEventArgs( e, c ), @this )
   end if
   
   return( cast( ubyte ptr, strptr( _components( c ).value ) ) + e * _components( c ).size )
@@ -187,7 +185,16 @@ end function
 function Components.removeComponent( e as Entity, c as ComponentID ) as boolean
   if( _componentMap( e, c ) = true ) then
     _componentMap( e, c ) = false
-    ECS.raiseEvent( EV_COMPONENTREMOVED, ComponentChangedEventArgs( e, c ) )
+    
+    for i as integer = 0 to _componentCount( e ) - 1
+      if( _componentTable( e, i ) = c ) then
+        _componentTable( e, i ) = _componentTable( e, _componentCount( e ) - 1 )
+        _componentCount( e ) -= 1
+        exit for
+      end if
+    next
+    
+    ECS.raiseEvent( EV_COMPONENTREMOVED, ComponentChangedEventArgs( e, c ), @this )
     
     return( true )
   end if

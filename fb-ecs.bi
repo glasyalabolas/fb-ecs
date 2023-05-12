@@ -2,6 +2,7 @@
 #define __FB_ECS__
 
 #include once "inc/ECS-commons.bi"
+#include once "inc/ECS-debug.bi"
 #include once "inc/ECS-events.bi"
 #include once "inc/ECS-ecs.bi"
 #include once "inc/ECS-entities.bi"
@@ -14,9 +15,8 @@
   
   TODO:
     - Save and load states for components and entities
-    - Implement named entities (for quickly find things like the player without
-      needing to pass the handle around
     - Implement serializing to/from XML for easy debugging and data-drive entity
       and component creation
+    X Check that systems receive the correct events from the correct components
 '/   
 #endif
