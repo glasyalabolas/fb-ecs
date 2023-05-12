@@ -1,6 +1,8 @@
 #include once "fbgame/fb-game.bi"
 #include once "ECS/fb-ecs.bi"
 
+Debug.toConsole()
+
 '' Experimental syntax
 #macro withComponent( _c_, _p_ )
   with *cast( _c_ ptr, _p_ )
@@ -143,15 +145,16 @@ static as KeyboardInput Game.keyboard
 static as BoundingBox Game.playArea = BoundingBox()
 
 sub Game.init( xRes as long, yRes as long )
-  randomize()
   screenRes( xRes, yRes, 32, 2 )
   screenSet( 0, 1 )
+  
+  randomize()
   
   playArea = BoundingBox( -20, -20, xRes + 20, yRes + 20 )
 end sub
 
 function createShip( e as Entities, c as Components ) as Entity
-  var pship = e.create()
+  var pship = e.create( "playership" )
   
   asComponent( Movable, c.addComponent( pship, "movable" ) ) _
     .pos = Vec2( Game.playArea.width / 2, Game.playArea.height / 2 )
@@ -160,7 +163,7 @@ function createShip( e as Entities, c as Components ) as Entity
   
   withComponent( Physics, c.addComponent( pship, "physics" ) )
     .vel = Vec2( 0.0, 0.0 )
-    .maxSpeed = 50.0f
+    .maxSpeed = 300.0f
   end with
   
   asComponent( Dimensions, c.addComponent( pship, "dimensions" ) ) _
@@ -169,8 +172,8 @@ function createShip( e as Entities, c as Components ) as Entity
     .color = YELLOW
   
   withComponent( ControlParameters, c.addComponent( pship, "controlparameters" ) )
-    .accel = 50.0f
-    .turnSpeed = 180.0f
+    .accel = 550.0f
+    .turnSpeed = 360.0f
     .rateOfFire = 100.0f
   end with
   
@@ -202,7 +205,7 @@ function createPlayer( e as Entities, c as Components ) as Entity
 end function
 
 sub createAsteroids( e as Entities, c as Components, count as long )
-  for i as integer = 0 to count - 1
+  for i as integer = 1 to count
     var asteroid = e.create()
     
     dim as single size = rng( 8.0f, 40.0f )
@@ -438,7 +441,7 @@ Game.init( 800, 600 )
 
 var r = ShipRenderSystem( AEntities, AComponents )
 var ar = AsteroidRenderSystem( AEntities, AComponents )
-var ast = MovableSystem( AEntities, AComponents )
+var m = MovableSystem( AEntities, AComponents )
 var ctrl = ControllableSystem( AEntities, AComponents )
 
 createShip( AEntities, AComponents )
@@ -450,21 +453,31 @@ dim as Fb.Event ev
 do
   do while( screenEvent( @ev ) )
     Game.keyboard.onEvent( @ev )
-    
-    'if( ev.type = Fb.EVENT_WINDOW_CLOSE ) then
-    '  done = true
-    'end if
   loop
+  
+  if( Game.keyboard.pressed( Fb.SC_R ) ) then
+    var p = AEntities.find( "playership" )
+    AComponents.removeComponent( p, "controllable" )
+  end if
+  
+  if( Game.keyboard.pressed( Fb.SC_A ) ) then
+    var p = AEntities.find( "playership" )
+    AComponents.addComponent( p, "controllable" )
+  end if
   
   '' Update
   ctrl.process( dt )
-  ast.process( dt )
+  m.process( dt )
   
   '' Render
   dt = timer()
     cls()
       r.process()
       ar.process()
+      ? "Controllable is processing: " & ctrl.processed.count & " entities."
+      ? "Movable is processing: " & m.processed.count & " entities."
+      ? "Rendering is processing: " & r.processed.count & " entities."
+      ? "Asteroid rendering is processing: " & ar.processed.count & " entities."
     flip()
     
     sleep( 1, 1 )
