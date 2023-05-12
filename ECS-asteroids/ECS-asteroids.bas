@@ -8,7 +8,7 @@ Debug.toConsole()
   with *cast( _c_ ptr, _p_ )
 #endmacro
 
-#define asComponent( _c_, _p_ ) *cast( _c_ ptr, _p_ )
+#define asComponent( _c_, _p_ ) ( *cast( _c_ ptr, _p_ ) )
 
 #define in ,
 
