@@ -11,8 +11,6 @@ type EntityTableEntry
   as long idx
 end type
 
-type as Components Components_
-
 type Entities extends Object
   public:
     declare constructor()
@@ -26,15 +24,10 @@ type Entities extends Object
     declare sub reset()
   
   private:
-    declare static sub entities_componentAdded( _
-      as any ptr, as ComponentChangedEventArgs, as Entities ptr )
-    
     as EntityTableEntry _entities( 0 to ECS_MAX_ENTITIES - 1 )
     as Entity _deleted( 0 to ECS_MAX_ENTITIES - 1 )
     as HashTable _entityMap
     as long _current, _deletedCount
-    
-    as Components_ ptr _listenTo
 end type
 
 constructor Entities()
