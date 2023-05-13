@@ -7,7 +7,7 @@ type as long EventID
 type EventArgs extends Object : end type
 
 '' Signature for event handling subs
-type as sub( as any ptr, as EventArgs ) EventHandler
+type as sub( as any ptr, as EventArgs, as any ptr = 0 ) EventHandler
 
 '' Convenience macro to perform the covariant cast
 #define toHandler( fp ) ( cast( EventHandler, @fp ) )
@@ -19,13 +19,24 @@ type EventTableEntry
   as long idx
 end type
 
+type EventRegister
+  declare constructor( as EventHandler, as any ptr )
+  
+  as EventHandler handler
+  as any ptr receiver
+end type
+
+constructor EventRegister( h as EventHandler, r as any ptr )
+  handler = h : receiver = r
+end constructor
+
 type Events
   public:
     declare constructor()
     declare constructor( as long )
     declare destructor()
     
-    declare function registerListener( as EventID, as EventHandler ) as boolean
+    declare function registerListener( as EventID, as EventHandler, as any ptr = 0 ) as boolean
     declare function unregisterListener( as EventID, as EventHandler ) as boolean
     declare sub raise( as EventID, as EventArgs, as any ptr = 0 )
   
@@ -53,6 +64,10 @@ constructor Events( size as long )
 end constructor
 
 destructor Events()
+  for i as integer = 0 to _size - 1
+  
+  next
+  
   erase( _bucket )
   erase( _entry )
 end destructor
@@ -78,7 +93,7 @@ function Events.find( eID as EventID ) as EventTableEntry ptr
   return( 0 )
 end function
 
-function Events.registerListener( eID as EventID, handler as EventHandler ) as boolean
+function Events.registerListener( eID as EventID, handler as EventHandler, receiver as any ptr = 0 ) as boolean
   var e = find( eID )
   
   if( e = 0 ) then
@@ -88,7 +103,7 @@ function Events.registerListener( eID as EventID, handler as EventHandler ) as b
       
       _bucket( _count ).idx = _entry( h )
       _bucket( _count ).eID = eID
-      _bucket( _count ).listeners.addLast( handler )
+      _bucket( _count ).listeners.addLast( new EventRegister( handler, receiver ) )
       _entry( h ) = _count
       
       _count += 1
@@ -97,7 +112,7 @@ function Events.registerListener( eID as EventID, handler as EventHandler ) as b
     end if
   else
     '' Event is already registered, just add the handler
-    e->listeners.addLast( handler )
+    e->listeners.addLast( new EventRegister( handler, receiver ) )
     return( true )
   end if
   
@@ -111,8 +126,8 @@ function Events.unregisterListener( eID as EventID, handler as EventHandler ) as
     var n = e->listeners.first
     
     do while( n <> 0 )
-      if( n->item = handler ) then
-        e->listeners.remove( n )
+      if( cast( EventRegister ptr, n->item )->handler = handler ) then
+        delete( cast( EventRegister ptr, e->listeners.remove( n ) ) )
         return( true )
       end if
       
@@ -130,7 +145,9 @@ sub Events.raise( eID as EventID, p as EventArgs, sender as any ptr = 0 )
     var n = e->listeners.first
     
     for i as integer = 0 to e->listeners.count - 1
-      cast( EventHandler, n->item )( sender, p )
+      cast( EventRegister ptr, n->item )->handler( _
+        sender, p, cast( EventRegister ptr, n->item )->receiver )
+      
       n = n->forward 
     next
   end if

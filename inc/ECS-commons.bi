@@ -1,13 +1,13 @@
 #ifndef __ECS_COMMONS__
 #define __ECS_COMMONS__
 
-const as long ECS_MAX_ENTITIES = 500
+const as long ECS_MAX_ENTITIES = 5000
 const as long ECS_MAX_COMPONENTS = 200
 const as long ECS_MAX_COMPONENTS_PER_ENTITY = 32
 
-type as long Entity
-type as long ECS_EVENT
-type as long ComponentID
+type as short Entity
+type as short ECS_EVENT
+type as short ComponentID
 type as string DATA_BUFFER
 
 function hash_32( x as ulong ) as ulong
@@ -62,5 +62,19 @@ function hashstr( x as string ) as ulong
   
   return( h )
 end function
+
+'' Experimental syntax
+#macro withComponent( _c_, _p_ )
+  with ( *cast( _c_ ptr, _p_ ) )
+#endmacro
+
+#define asComponent( _c_, _p_ ) ( *cast( _c_ ptr, _p_ ) )
+
+#define in ,
+
+#macro each?( _e_, _p_ )
+  i as integer = 0 to _p_.count - 1
+  dim _e_ = _p_[ i ]
+#endmacro
 
 #endif

@@ -15,6 +15,6 @@
 #include once "inc/fbg-mouse.bi"
 #include once "inc/fbg-game-loop.bi"
 
-#include once "inc/fbg-imaging.bi"
+'#include once "inc/fbg-imaging.bi"
 
 #endif

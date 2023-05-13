@@ -15,9 +15,10 @@ type System extends Object
     declare constructor()
     declare constructor( as Entities, as Components )
     
-    declare property getEntities() byref as Entities
-    declare property getComponents() byref as Components
     declare property entityCount() as long
+    
+    declare function getEntities() byref as Entities
+    declare function getComponents() byref as Components
     
     declare function requires( as string ) as any ptr
   
@@ -32,8 +33,8 @@ type System extends Object
     declare function isRequired( as ComponentID ) as boolean
     declare function hasRequiredComponents( as Entity ) as boolean
     
-    as ComponentID _required( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
-    as boolean _isProcessed( 0 to ECS_MAX_ENTITIES - 1 )
+    as ComponentID _required( any )'( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
+    as boolean _isProcessed( any )'( 0 to ECS_MAX_ENTITIES - 1 )
     
     as UnorderedList _processed
     as Entities ptr _entities
@@ -47,6 +48,9 @@ constructor System( e as Entities, c as Components )
   ECS.registerListener( EV_ENTITYDESTROYED, toHandler( System.system_entityDestroyed ), @this )
   ECS.registerListener( EV_COMPONENTADDED, toHandler( System.system_componentAdded ), @this )
   ECS.registerListener( EV_COMPONENTREMOVED, toHandler( System.system_componentRemoved ), @this )
+  
+  redim _required( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
+  redim _isProcessed( 0 to ECS_MAX_ENTITIES - 1 )
   
   _entities = @e
   _components = @c
@@ -70,16 +74,16 @@ property System.entityCount() as long
   return( _processed.count )
 end property
 
-property System.getEntities() byref as Entities
+function System.getEntities() byref as Entities
   return( *_entities )
-end property
+end function
 
-property System.getComponents() byref as Components
+function System.getComponents() byref as Components
   return( *_components )
-end property
+end function
 
 function System.requires( c as string ) as any ptr
-  dim as ComponentID id = _components->find( c )
+  dim as ComponentID id = _components->getID( c )
   
   _required( _requiredCount ) = id
   _requiredCount += 1
@@ -113,6 +117,7 @@ sub System.system_entityDestroyed( _
     
     if( index <> -1 ) then
       receiver->_processed.remove( index )
+      receiver->_isProcessed( e.eID ) = false
     end if
   end if
 end sub

@@ -1,15 +1,16 @@
 #ifndef __ECS_COMPONENTS__
 #define __ECS_COMPONENTS__
 
+#include once "fb-hashtable.bi"
+
 const as long INVALID_COMPONENT = -1
 const as long COMPONENT_NOT_FOUND = -2
 
 type ComponentTableEntry
-  as string name
   as ComponentID id
-  as DATA_BUFFER value
-  as long idx
   as uinteger size
+  as DATA_BUFFER value
+  as string name
 end type
 
 /'
@@ -23,7 +24,7 @@ end type
 '/
 type Components extends Object
   public:
-    declare constructor()
+    declare constructor( as Entities )
     declare destructor()
     
     declare operator []( as ComponentID ) as any ptr
@@ -31,7 +32,7 @@ type Components extends Object
     
     declare function register( as string, as uinteger ) as ComponentID
     declare function register( as string ) as ComponentID
-    declare function find( as string ) as ComponentID
+    declare function getID( as string ) as ComponentID
     declare function getName( as ComponentID ) as string
     declare function getComponent( as Entity, as ComponentID ) as any ptr
     declare function getComponent( as Entity, as string ) as any ptr
@@ -41,28 +42,46 @@ type Components extends Object
     declare function removeComponent( as Entity, as string ) as boolean
     
     declare function hasComponent( as Entity, as ComponentID ) as boolean
-  
+    
+    declare function getDebugInfo() as string
+    
   private:
-    as ComponentTableEntry _components( 0 to ECS_MAX_COMPONENTS - 1 )
-    as long _index( 0 to ECS_MAX_COMPONENTS - 1 )
+    declare static sub components_entityDestroyed( _
+      as any ptr, as EntityChangedEventArgs, as Components ptr )
+    
+    as ComponentTableEntry _components( any )
+    as boolean _componentMap( any, any )
+    as long _componentTable( any, any )
+    as long _componentCount( any )
+    
+    as Fb.HashTable ptr _hashTable
+    
+    as Entities ptr _entities
     as long _count
-    as boolean _componentMap( 0 to ECS_MAX_ENTITIES - 1, 0 to ECS_MAX_COMPONENTS - 1 )
-    as long _componentTable( 0 to ECS_MAX_ENTITIES - 1, 0 to ECS_MAX_COMPONENTS - 1 )
-    as long _componentCount( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
 end type
 
-constructor Components()
-  for i as integer = 0 to ECS_MAX_COMPONENTS - 1
-    _index( i ) = INVALID_COMPONENT
-  next
+constructor Components( e as Entities )
+  redim _components( 0 to ECS_MAX_COMPONENTS - 1 )
+  redim _componentMap( 0 to ECS_MAX_ENTITIES - 1, 0 to ECS_MAX_COMPONENTS - 1 )
+  redim _componentTable( 0 to ECS_MAX_ENTITIES - 1, 0 to ECS_MAX_COMPONENTS - 1 )
+  redim _componentCount( 0 to ECS_MAX_ENTITIES - 1 )
+  
+  _entities = @e
+  
+  ECS.registerListener( EV_ENTITYDESTROYED, toHandler( Components.components_entityDestroyed ), @this )
+  
+  _hashTable = new Fb.HashTable()
 end constructor
 
 destructor Components()
+  ECS.unregisterListener( EV_ENTITYDESTROYED, toHandler( Components.components_entityDestroyed ), @this )
+  
   erase( _components )
-  erase( _index )
   erase( _componentMap )
   erase( _componentTable )
   erase( _componentCount )
+  
+  delete( _hashTable )
 end destructor
 
 operator Components.[]( id as ComponentID ) as any ptr
@@ -70,24 +89,35 @@ operator Components.[]( id as ComponentID ) as any ptr
 end operator
 
 operator Components.[]( n as string ) as any ptr
-  dim as ComponentID id = find( n )
+  dim as ComponentID id = getID( n )
   
   return( cast( ubyte ptr, strptr( _components( id ).value ) ) )
 end operator
 
-function Components.find( k as string ) as ComponentID
-  dim as ulong h = hashstr( k ) mod ECS_MAX_COMPONENTS
-  dim as long current = _index( h )
+function Components.getDebugInfo() as string
+  dim as string s
   
-  do while( current <> -1 )
-    if( _components( current ).name = k ) then
-      return( _components( current ).id )
-    end if
-    
-    current = _components( current ).idx
-  loop
+  dim as uinteger sum
   
-  return( COMPONENT_NOT_FOUND )
+  for i as integer = 0 to _count - 1
+    sum += _components( i ).size * ECS_MAX_ENTITIES
+  next
+  
+  s &= "** Components Info **" & chr( 13, 10 )
+  s &= "Components registered: " & _count & chr( 13, 10 )
+  s &= "Memory (bytes): " & sum & chr( 13, 10 )
+  
+  for i as integer = 0 to _count - 1
+    s &= _components( i ).id & ": " & _components( i ).name & " (" & _components( i ).size & ")" & chr( 13, 10 )
+  next
+  
+  return( s )
+end function
+
+function Components.getID( n as string ) as ComponentID
+  dim as ComponentTableEntry ptr entry = _hashTable->find( n )
+  
+  return( iif( entry, entry->id, COMPONENT_NOT_FOUND ) )
 end function
 
 function Components.getName( c as ComponentID ) as string
@@ -96,20 +126,17 @@ end function
 
 function Components.register( n as string, s as uinteger ) as ComponentID
   if( _count < ECS_MAX_COMPONENTS ) then
-    if( _count > 0 andAlso find( n ) <> COMPONENT_NOT_FOUND ) then return INVALID_COMPONENT
-    
       dim as long id = _count
-      dim as ulong h = hashstr( n ) mod ECS_MAX_COMPONENTS
       
       with _components( _count )
-        .idx = _index( h )
         .id = id
         .name = n
         .value = string( s * ECS_MAX_ENTITIES, chr( 0 ) )
         .size = s
+        
+        _hashTable->add( .name, @_components( id ) )
       end with
       
-      _index( h ) = id
       _count += 1
       
       return( id )
@@ -163,7 +190,7 @@ function Components.getComponent( e as Entity, c as ComponentID ) as any ptr
 end function
 
 function Components.getComponent( e as Entity, c as string ) as any ptr
-  return( getComponent( e, find( c ) ) )
+  return( getComponent( e, getID( c ) ) )
 end function
 
 function Components.addComponent( e as Entity, c as ComponentID ) as any ptr
@@ -179,7 +206,7 @@ function Components.addComponent( e as Entity, c as ComponentID ) as any ptr
 end function
 
 function Components.addComponent( e as Entity, c as string ) as any ptr
-  return( addComponent( e, find( c ) ) )
+  return( addComponent( e, getID( c ) ) )
 end function
 
 function Components.removeComponent( e as Entity, c as ComponentID ) as boolean
@@ -203,12 +230,24 @@ function Components.removeComponent( e as Entity, c as ComponentID ) as boolean
 end function
 
 function Components.removeComponent( e as Entity, c as string ) as boolean
-  return( removeComponent( e, find( c ) ) )
+  return( removeComponent( e, cast( ComponentTableEntry ptr, _hashTable->find( c ) )->id ) )
 end function
 
 function Components.hasComponent( e as Entity, c as ComponentID ) as boolean
   return( _componentMap( e, c ) )
 end function
+
+sub Components.components_entityDestroyed( _
+  sender as any ptr, e as EntityChangedEventArgs, receiver as Components ptr )
+  
+  if( sender = receiver->_entities ) then
+    for i as integer = 0 to receiver->_componentCount( e.eID )
+      receiver->_componentMap( e.eID, receiver->_componentTable( e.eID, i ) ) = false
+    next
+    
+    receiver->_componentCount( e.eID ) = 0
+  end if
+end sub
 
 '' Convenience macro to register components
 #macro registerComponent( _cmp_, _n_, _c_ )

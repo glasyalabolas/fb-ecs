@@ -51,21 +51,21 @@ function UnorderedList.find( item as long ) as long
 end function
 
 function UnorderedList.add( item as long ) as long
-  if( _count < ubound( _list ) ) then
+  'if( _count < ubound( _list ) ) then
     _list( _count ) = item
     _count += 1
     
     return( _count - 1 )
-  end if
+  'end if
   
-  return( -1 )
+  'return( -1 )
 end function
 
 sub UnorderedList.remove( index as long )
-  if( _count > 0 ) then
+  'if( _count > 0 ) then
     _list( index ) = _list( _count - 1 )
     _count -= 1
-  end if
+  'end if
 end sub
 
 sub UnorderedList.clear()
