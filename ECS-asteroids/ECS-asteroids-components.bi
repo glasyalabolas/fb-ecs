@@ -42,10 +42,6 @@ type Lifetime
   as single value
 end type
 
-type Collidable
-  as BoundingCircle shape
-end type
-
 type Ship
   as Entity shipID
 end type
@@ -53,3 +49,8 @@ end type
 type ControlParameters
   as single rateOfFire, accel, turnSpeed
 end type
+
+type Collidable
+  as single radius
+end type
+

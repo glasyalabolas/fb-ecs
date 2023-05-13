@@ -1,6 +1,3 @@
-/'
-  BUGS
-'/
 function createShip( e as Entities, c as Components ) as Entity
   var pship = e.create( "playership" )
   
@@ -35,6 +32,9 @@ function createShip( e as Entities, c as Components ) as Entity
     .strafe = Fb.SC_LSHIFT
   end with
   
+  asComponent( Collidable, c.addComponent( pship, "collidable" ) ) _
+    .radius = 5.0f
+  
   c.addComponent( pship, "type:ship" )
   
   return( pship )
@@ -57,10 +57,11 @@ sub createAsteroids( e as Entities, c as Components, count as long )
   for i as integer = 1 to count
     var asteroid = e.create()
     
-    dim as single size = 4'rng( 8.0f, 40.0f )
+    dim as single size = rng( 8.0f, 40.0f )
     
     asComponent( Movable, c.addComponent( asteroid, "movable" ) ) _
       .pos = rngWithin( Game.playArea )
+    
     withComponent( Physics, c.addComponent( asteroid, "physics" ) )
       .vel = Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f )
       .maxSpeed = 100.0f
@@ -72,6 +73,8 @@ sub createAsteroids( e as Entities, c as Components, count as long )
       .color = RED
     asComponent( Health, c.addComponent( asteroid, "health" ) ) _
       .value = 100.0f
+    asComponent( Collidable, c.addComponent( asteroid, "collidable" ) ) _
+      .radius = size
     
     c.addComponent( asteroid, "type:asteroid" )
   next

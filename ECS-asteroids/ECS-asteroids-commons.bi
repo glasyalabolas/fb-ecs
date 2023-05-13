@@ -8,8 +8,9 @@ const as single C_DAMAGE_SCALE = 0.007f
 enum Colors
   WHITE  = rgba( 255, 255, 255, 255 )
   RED    = rgba( 255, 0, 0, 255 )
-  YELLOW = rgba( 255, 255, 0, 255 )
+  GREEN  = rgba( 0, 255, 0, 255 )
   BLUE   = rgba( 0, 0, 255, 255 )
+  YELLOW = rgba( 255, 255, 0, 255 )
 end enum
 
 '' Returns a normalized vector in a random direction

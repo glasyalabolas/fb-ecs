@@ -28,9 +28,9 @@ registerComponent( AComponents, "health", Health )
 registerComponent( AComponents, "score", Score )
 registerComponent( AComponents, "speed", Speed )
 registerComponent( AComponents, "lifetime", Lifetime )
-registerComponent( AComponents, "collidable", Collidable )
 registerComponent( AComponents, "ship", Ship )
 registerComponent( AComponents, "controlparameters", ControlParameters )
+registerComponent( AComponents, "collidable", Collidable )
 
 AComponents.register( "type:ship" )
 AComponents.register( "type:asteroid" )
@@ -56,6 +56,7 @@ debugComponent( "lifetime" )
 debugComponent( "collidable" )
 debugComponent( "ship" )
 debugComponent( "controlparameters" )
+debugComponent( "collidable" )
 
 /'
   Main code
@@ -69,8 +70,9 @@ var ar = AsteroidRenderSystem( AEntities, AComponents )
 var m = MovableSystem( AEntities, AComponents )
 var ctrl = ControllableSystem( AEntities, AComponents )
 var br = BulletRenderSystem( AEntities, AComponents )
+var coll = CollidableSystem( Aentities, AComponents )
 
-createAsteroids( AEntities, AComponents, 2000 )
+createAsteroids( AEntities, AComponents, 50 )
 createPlayer( AEntities, AComponents )
 
 dim as double dt, updateTime, updateTotal, renderTime, renderTotal, frameTime
@@ -101,6 +103,8 @@ do
   '' Update
   ctrl.process( dt )
   m.process( dt )
+  lt.process( dt )
+  coll.process( dt )
   
   updateTime = timer() - updateTime
   updateTotal += updateTime
@@ -117,13 +121,11 @@ do
       ? "Update: " & int( 1 / ( updateTotal / count ) ) & " (" & int( ( updateTotal / frameTime ) * 100 ) & "%)"
       ? "Render: " & int( 1 / ( renderTotal / count ) ) & " (" & int( ( renderTotal / frameTime ) * 100 ) & "%)" 
       ? "Lifetime is processing: " & lt.processed.count & " entities."
-      ? "BulletRender is processing: " & br.processed.count & " entities."
+      ? "Collidable is processing: " & coll.processed.count & " entities."
     flip()
     renderTime = timer() - renderTime
     renderTotal += renderTime
     
     sleep( 1, 1 )
   dt = timer() - dt
-  
-  lt.process( dt )
 loop until( Game.keyboard.pressed( Fb.SC_ESCAPE ) )

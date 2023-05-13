@@ -11,6 +11,8 @@ type System extends Object
     
     declare abstract sub process( as double = 0.0d )
     
+    declare function getDebugInfo() as string
+    
   protected:
     declare constructor()
     declare constructor( as Entities, as Components )
@@ -33,8 +35,8 @@ type System extends Object
     declare function isRequired( as ComponentID ) as boolean
     declare function hasRequiredComponents( as Entity ) as boolean
     
-    as ComponentID _required( any )'( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
-    as boolean _isProcessed( any )'( 0 to ECS_MAX_ENTITIES - 1 )
+    as ComponentID _required( any )
+    as boolean _isProcessed( any )
     
     as UnorderedList _processed
     as Entities ptr _entities
@@ -65,6 +67,18 @@ destructor System()
   erase( _required )
   erase( _isProcessed )
 end destructor
+
+function System.getDebugInfo() as string
+  dim as string s = "["
+  
+  for i as integer = 0 to _processed.count - 1
+    s &= _processed[ i ] & iif( i = _processed.count - 1, "", ";" )
+  next
+  
+  s &= "]" & chr( 13, 10 )
+  
+  return( s )
+end function
 
 property System.processed() byref as UnorderedList
   return( _processed )
