@@ -11,31 +11,27 @@ using FbGame
 Debug.toConsole()
 
 Debug.print( "Creating entities and components..." )
-
-var AEntities = Entities(), AComponents = Components( AEntities )
-
+  var AEntities = Entities(), AComponents = Components( AEntities )
 Debug.print( "Done." )
 
 Debug.print( "Registering components..." )
-
-registerComponent( AComponents, "movable", Movable )
-registerComponent( AComponents, "orientable", Orientable )
-registerComponent( AComponents, "physics", Physics )
-registerComponent( AComponents, "appearance", Appearance )
-registerComponent( AComponents, "dimensions", Dimensions )
-registerComponent( AComponents, "controllable", Controllable )
-registerComponent( AComponents, "health", Health )
-registerComponent( AComponents, "score", Score )
-registerComponent( AComponents, "speed", Speed )
-registerComponent( AComponents, "lifetime", Lifetime )
-registerComponent( AComponents, "ship", Ship )
-registerComponent( AComponents, "controlparameters", ControlParameters )
-registerComponent( AComponents, "collidable", Collidable )
-
-AComponents.register( "type:ship" )
-AComponents.register( "type:asteroid" )
-AComponents.register( "type:bullet" )
-
+  registerComponent( AComponents, "position", Position )
+  registerComponent( AComponents, "orientation", Orientation )
+  registerComponent( AComponents, "physics", Physics )
+  registerComponent( AComponents, "appearance", Appearance )
+  registerComponent( AComponents, "dimensions", Dimensions )
+  registerComponent( AComponents, "controls", Controls )
+  registerComponent( AComponents, "health", Health )
+  registerComponent( AComponents, "score", Score )
+  registerComponent( AComponents, "speed", Speed )
+  registerComponent( AComponents, "lifetime", Lifetime )
+  registerComponent( AComponents, "ship", Ship )
+  registerComponent( AComponents, "controlparameters", ControlParameters )
+  registerComponent( AComponents, "collision", Collision )
+  
+  AComponents.register( "type:ship" )
+  AComponents.register( "type:asteroid" )
+  AComponents.register( "type:bullet" )
 Debug.print( "Done" )
 
 #macro debugComponent( _n_ )
@@ -43,20 +39,19 @@ Debug.print( "Done" )
 #endmacro
 
 Debug.print( "Components:" )
-debugComponent( "movable" )
-debugComponent( "orientable" )
+debugComponent( "position" )
+debugComponent( "orientation" )
 debugComponent( "physics" )
 debugComponent( "appearance" )
 debugComponent( "dimensions" )
-debugComponent( "controllable" )
+debugComponent( "controls" )
 debugComponent( "health" )
 debugComponent( "score" )
 debugComponent( "speed" )
 debugComponent( "lifetime" )
-debugComponent( "collidable" )
+debugComponent( "collision" )
 debugComponent( "ship" )
 debugComponent( "controlparameters" )
-debugComponent( "collidable" )
 
 /'
   Main code
@@ -71,6 +66,8 @@ var m = MovableSystem( AEntities, AComponents )
 var ctrl = ControllableSystem( AEntities, AComponents )
 var br = BulletRenderSystem( AEntities, AComponents )
 var coll = CollidableSystem( Aentities, AComponents )
+var sht = ShootableSystem( AEntities, AComponents )
+var hlt = HealthSystem( AEntities, AComponents )
 
 createAsteroids( AEntities, AComponents, 50 )
 createPlayer( AEntities, AComponents )
@@ -90,20 +87,21 @@ do
   
   if( Game.keyboard.pressed( Fb.SC_R ) ) then
     var p = AEntities.find( "playership" )
-    AComponents.removeComponent( p, "controllable" )
+    AComponents.removeComponent( p, "controls" )
   end if
   
   if( Game.keyboard.pressed( Fb.SC_A ) ) then
     var p = AEntities.find( "playership" )
-    AComponents.addComponent( p, "controllable" )
+    AComponents.addComponent( p, "controls" )
   end if
   
   updateTime = timer()
   
   '' Update
+  lt.process( dt )
+  hlt.process( dt )
   ctrl.process( dt )
   m.process( dt )
-  lt.process( dt )
   coll.process( dt )
   
   updateTime = timer() - updateTime
@@ -116,12 +114,11 @@ do
       br.process()
       r.process()
       ar.process()
+      sht.process()
       
       ? "FPS: " & int( 1 / ( frameTime  / count ) )
       ? "Update: " & int( 1 / ( updateTotal / count ) ) & " (" & int( ( updateTotal / frameTime ) * 100 ) & "%)"
       ? "Render: " & int( 1 / ( renderTotal / count ) ) & " (" & int( ( renderTotal / frameTime ) * 100 ) & "%)" 
-      ? "Lifetime is processing: " & lt.processed.count & " entities."
-      ? "Collidable is processing: " & coll.processed.count & " entities."
     flip()
     renderTime = timer() - renderTime
     renderTotal += renderTime

@@ -1,10 +1,10 @@
 function createShip( e as Entities, c as Components ) as Entity
   var pship = e.create( "playership" )
   
-  asComponent( Movable, c.addComponent( pship, "movable" ) ) _
+  asComponent( Position, c.addComponent( pship, "position" ) ) _
     .pos = Vec2( Game.playArea.width / 2, Game.playArea.height / 2 )
 
-  asComponent( Orientable, c.addComponent( pship, "orientable" ) ) _
+  asComponent( Orientation, c.addComponent( pship, "orientation" ) ) _
     .dir = Vec2( 0.0, -1.0 )
   
   withComponent( Physics, c.addComponent( pship, "physics" ) )
@@ -23,7 +23,7 @@ function createShip( e as Entities, c as Components ) as Entity
     .rateOfFire = 100.0f
   end with
   
-  withComponent( Controllable, c.addComponent( pship, "controllable" ) )
+  withComponent( Controls, c.addComponent( pship, "controls" ) )
     .forward = Fb.SC_UP
     .backward = Fb.SC_DOWN
     .rotateLeft = Fb.SC_LEFT
@@ -32,7 +32,7 @@ function createShip( e as Entities, c as Components ) as Entity
     .strafe = Fb.SC_LSHIFT
   end with
   
-  asComponent( Collidable, c.addComponent( pship, "collidable" ) ) _
+  asComponent( Collision, c.addComponent( pship, "collision" ) ) _
     .radius = 5.0f
   
   c.addComponent( pship, "type:ship" )
@@ -53,37 +53,43 @@ function createPlayer( e as Entities, c as Components ) as Entity
   return( player )
 end function
 
+function createAsteroid( e as Entities, c as Components ) as Entity
+  var asteroid = e.create()
+  
+  dim as single size = rng( 8.0f, 40.0f )
+  
+  asComponent( Position, c.addComponent( asteroid, "position" ) ) _
+    .pos = rngWithin( Game.playArea )
+  
+  withComponent( Physics, c.addComponent( asteroid, "physics" ) )
+    .vel = Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f )
+    .maxSpeed = 100.0f
+  end with
+  
+  asComponent( Dimensions, c.addComponent( asteroid, "dimensions" ) ) _
+    .size = size
+  asComponent( Appearance, c.addComponent( asteroid, "appearance" ) ) _
+    .color = RED
+  asComponent( Health, c.addComponent( asteroid, "health" ) ) _
+    .value = 10.0f * size
+  asComponent( Collision, c.addComponent( asteroid, "collision" ) ) _
+    .radius = size
+  
+  c.addComponent( asteroid, "type:asteroid" )
+  
+  return( asteroid )
+end function
+
 sub createAsteroids( e as Entities, c as Components, count as long )
   for i as integer = 1 to count
-    var asteroid = e.create()
-    
-    dim as single size = rng( 8.0f, 40.0f )
-    
-    asComponent( Movable, c.addComponent( asteroid, "movable" ) ) _
-      .pos = rngWithin( Game.playArea )
-    
-    withComponent( Physics, c.addComponent( asteroid, "physics" ) )
-      .vel = Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f )
-      .maxSpeed = 100.0f
-    end with
-    
-    asComponent( Dimensions, c.addComponent( asteroid, "dimensions" ) ) _
-      .size = size
-    asComponent( Appearance, c.addComponent( asteroid, "appearance" ) ) _
-      .color = RED
-    asComponent( Health, c.addComponent( asteroid, "health" ) ) _
-      .value = 100.0f
-    asComponent( Collidable, c.addComponent( asteroid, "collidable" ) ) _
-      .radius = size
-    
-    c.addComponent( asteroid, "type:asteroid" )
+    createAsteroid( e, c )
   next
 end sub
 
-sub createBullet( e as Entities, c as Components, p as Vec2, vel as Vec2, spd as single, lt as single )
+function createBullet( e as Entities, c as Components, p as Vec2, vel as Vec2, spd as single, lt as single ) as Entity
   var bullet = e.create()
   
-  asComponent( Movable, c.addComponent( bullet, "movable" ) ) _
+  asComponent( Position, c.addComponent( bullet, "position" ) ) _
     .pos = p
   
   withComponent( Physics, c.addComponent( bullet, "physics" ) )
@@ -92,9 +98,11 @@ sub createBullet( e as Entities, c as Components, p as Vec2, vel as Vec2, spd as
   end with
   
   asComponent( Dimensions, c.addComponent( bullet, "dimensions" ) ) _
-    .size = 6.0f
+    .size = 4.0f
   asComponent( Lifetime, c.addComponent( bullet, "lifetime" ) ) _
     .value = lt
   
   c.addComponent( bullet, "type:bullet" )
-end sub
+  
+  return( bullet )
+end function

@@ -1,8 +1,8 @@
-type Movable
+type Position
   as Vec2 pos
 end type
 
-type Orientable
+type Orientation
   as Vec2 dir
 end type
 
@@ -17,13 +17,6 @@ end type
 
 type Dimensions
   as single size
-end type
-
-type Controllable
-  as long _
-    forward, backward, _
-    rotateLeft, rotateRight, _
-    fire, strafe
 end type
 
 type Health
@@ -46,11 +39,18 @@ type Ship
   as Entity shipID
 end type
 
+type Controls
+  as long _
+    forward, backward, _
+    rotateLeft, rotateRight, _
+    fire, strafe
+end type
+
 type ControlParameters
   as single rateOfFire, accel, turnSpeed
 end type
 
-type Collidable
+type Collision
   as single radius
 end type
 

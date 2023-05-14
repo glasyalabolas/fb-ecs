@@ -70,13 +70,6 @@ end function
 
 #define asComponent( _c_, _p_ ) ( *cast( _c_ ptr, _p_ ) )
 
-'#define in ,
-'
-'#macro each?( _e_, _p_ )
-'  i as integer = 0 to _p_.count - 1
-'  dim _e_ = _p_[ i ]
-'#endmacro
-
 #define in ,
 
 #macro each?( _e_, _p_ )

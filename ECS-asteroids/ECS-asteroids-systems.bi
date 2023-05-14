@@ -1,4 +1,4 @@
-sub move( m as Movable, p as Physics, dt as double )
+sub move( m as Position, p as Physics, dt as double )
   if( p.vel.lengthSq() > p.maxSpeed ^ 2 ) then
     p.vel = p.vel.normalized() * p.maxSpeed
   end if
@@ -13,14 +13,14 @@ type MovableSystem extends System
   declare sub process( as double = 0.0d ) override
   
   private:
-    as Movable ptr m
+    as Position ptr p
     as Physics ptr ph
 end type
 
 constructor MovableSystem( e as Entities, c as Components )
   base( e, c )
   
-  m = requires( "movable" )
+  p = requires( "position" )
   ph = requires( "physics" )
 end constructor
 
@@ -28,9 +28,10 @@ destructor MovableSystem() : end destructor
 
 sub MovableSystem.process( dt as double = 0.0d )
   for each e as Entity in processed
-    move( m[ e ], ph[ e ], dt )
+    move( p[ e ], ph[ e ], dt )
     
-    m[ e ].pos = wrapV( m[ e ].pos, _
+    '' Wrap around play area
+    p[ e ].pos = wrapV( p[ e ].pos, _
       Game.playArea.x, Game.playArea.y, _
       Game.playArea.width, Game.playArea.height )
   next
@@ -40,15 +41,15 @@ sub accelerate( p as Physics, a as Vec2 )
   p.vel += a 
 end sub
 
-sub rotate( o as Orientable, a as single )
+sub rotate( o as Orientation, a as single )
   o.dir = o.dir.rotated( rad( a ) ).normalize()
 end sub
 
 sub shoot( e as Entities, c as Components, _
-  m as Movable, o as Orientable, ph as Physics, dt as double )
+  m as Position, o as Orientation, ph as Physics, dt as double )
   
   '' Choose a random direction arc
-  var vel = o.dir.rotated( rad( rng( -5.0f, 5.0f ) ) ).normalize()
+  var vel = o.dir.rotated( rad( rng( -3.0f, 3.0f ) ) ).normalize()
   
   '' Spawn bullet
   createBullet( e, c, m.pos, vel, 500.0f, 2000.0f )
@@ -65,20 +66,20 @@ type ControllableSystem extends System
   declare sub process( as double = 0.0d ) override
   
   private:
-    as Controllable ptr ctrl
+    as Controls ptr ctrl
     as ControlParameters ptr params
-    as Movable ptr m
-    as Orientable ptr o
+    as Position ptr p
+    as Orientation ptr o
     as Physics ptr ph
 end type
 
 constructor ControllableSystem( e as Entities, c as Components )
   base( e, c )
   
-  ctrl = requires( "controllable" )
+  ctrl = requires( "controls" )
   params = requires( "controlparameters" )
-  m = requires( "movable" )
-  o = requires( "orientable" )
+  p = requires( "position" )
+  o = requires( "orientation" )
   ph = requires( "physics" )
 end constructor
 
@@ -118,12 +119,11 @@ sub ControllableSystem.process( dt as double = 0.0d )
       end if
       
       if( Game.keyboard.pressed( .fire ) ) then
-        shoot( getEntities(), getComponents(), m[ e ], o[ e ], ph[ e ], dt )
+        shoot( getEntities(), getComponents(), p[ e ], o[ e ], ph[ e ], dt )
       end if
       
-      'if( Game.keyboard.repeated( .fire, params[ e ].rateOfFire ) ) then
-      if( Game.keyboard.repeated( .fire, 10.0 ) ) then
-        shoot( getEntities(), getComponents(), m[ e ], o[ e ], ph[ e ], dt )
+      if( Game.keyboard.repeated( .fire, params[ e ].rateOfFire ) ) then
+        shoot( getEntities(), getComponents(), p[ e ], o[ e ], ph[ e ], dt )
       end if
     end with
   next
@@ -170,19 +170,19 @@ type CollidableSystem extends System
   declare sub process( as double = 0.0d ) override
   
   private:
-    as Movable ptr m
+    as Position ptr p
     as Physics ptr ph
     as Dimensions ptr d
-    as Collidable ptr coll
+    as Collision ptr coll
 end type
 
 constructor CollidableSystem( e as Entities, c as Components )
   base( e, c )
   
-  coll = requires( "collidable" )
-  m = requires( "movable" )
+  p = requires( "position" )
   ph = requires( "physics" )
   d = requires( "dimensions" )
+  coll = requires( "collision" )
 end constructor
 
 destructor CollidableSystem() : end destructor
@@ -222,7 +222,7 @@ function resolveCollision( _
   return( mtv )
 end function
 
-function bc_Collided( _
+function collided( _
     a1 as BoundingCircle, a2 as BoundingCircle, vel1 as Vec2, vel2 as Vec2 ) _
   as Vec2
   
@@ -237,24 +237,124 @@ sub CollidableSystem.process( dt as double = 0.0d )
   var a1 = BoundingCircle()
   var a2 = BoundingCircle()
   
-  for each e1 as Entity in processed
-    a1.center = m[ e1 ].pos
+  for i as integer = 0 to processed.count - 1
+    dim as Entity e1 = processed[ i ]
+    
+    a1.center = p[ e1 ].pos
     a1.radius = coll[ e1 ].radius
     
-    for j as integer = e1 + 1 to processed.count - 1
+    for j as integer = i + 1 to processed.count - 1
       dim as Entity e2 = processed[ j ]
       
-      a2.center = m[ e2 ].pos
+      a2.center = p[ e2 ].pos
       a2.radius = coll[ e2 ].radius
       
       if( a1.overlapsWith( a2 ) ) then
-        var mtv = bc_Collided( a1, a2, ph[ e1 ].vel, ph[ e2 ].vel )
+        var mtv = collided( a1, a2, ph[ e1 ].vel, ph[ e2 ].vel )
         
-        '' Adjust the position of the asteroids
-        m[ e1 ].pos += mtv * 0.5f
-        m[ e2 ].pos -= mtv * 0.5f
+        '' Adjust the position of the entities
+        p[ e1 ].pos += mtv * 0.5f
+        p[ e2 ].pos -= mtv * 0.5f
       end if
     next
+  next
+end sub
+
+type ShootableSystem extends System
+  declare constructor( as Entities, as Components )
+  declare destructor() override
+  
+  declare sub process( as double = 0.0d ) override
+  
+  private:
+    as Position ptr p
+    as Collision ptr coll
+    as Dimensions ptr d
+    as Lifetime ptr lt
+    as Health ptr h
+end type
+
+constructor ShootableSystem( e as Entities, c as Components )
+  base( e, c )
+  
+  has( "type:asteroid" )
+  has( "type:bullet" )
+  
+  lt = has( "lifetime" )
+  h = has( "health" )
+  p = requires( "position" )
+  d = requires( "dimensions" )
+end constructor
+
+destructor ShootableSystem() : end destructor
+
+sub ShootableSystem.process( dt as double = 0.0d )
+  var bullets = UnorderedList( processed.count )
+  
+  for each e as Entity in processed
+    if( contains( e, "type:bullet" ) ) then
+      bullets.add( e )
+    end if
+  next
+  
+  var asteroids = UnorderedList( processed.count )
+  
+  for each e as Entity in processed
+    if( contains( e, "type:asteroid" ) ) then
+      asteroids.add( e )
+    end if
+  next
+  
+  var abb = BoundingCircle(), bbb = BoundingCircle()
+  
+  for each b as Entity in bullets
+    bbb.center = p[ b ].pos
+    bbb.radius = d[ b ].size
+    
+    for each a as Entity in asteroids
+      abb.center = p[ a ].pos
+      abb.radius = d[ a ].size
+      
+      if( bbb.overlapsWith( abb ) ) then
+        '' Collided
+        circle( abb.center.x, abb.center.y ), d[ a ].size, rgb( 0, 0, 255 ), , , , f
+        
+        lt[ b ].value = 0.0f
+        h[ a ].value -= 30.0f
+      end if 
+    next
+  next
+end sub
+
+type HealthSystem extends System
+  declare constructor( as Entities, as Components )
+  declare destructor() override
+  
+  declare sub process( as double = 0.0d )
+  
+  private:
+    as Health ptr h
+end type
+
+constructor HealthSystem( e as Entities, c as Components )
+  base( e, c )
+  
+  h = requires( "health" )
+end constructor
+
+destructor HealthSystem() : end destructor
+
+sub HealthSystem.process( dt as double = 0.0d )
+  var destroyed = UnorderedList( processed.count )
+  
+  for each e as Entity in processed
+    if( h[ e ].value < 0.0f ) then
+      destroyed.add( e )
+    end if
+  next
+  
+  for each e as Entity in destroyed
+    getEntities().destroy( e )
   next
 end sub
 
@@ -265,8 +365,8 @@ type ShipRenderSystem extends System
   declare sub process( as double = 0.0d ) override
   
   private:
-    as Movable ptr m
-    as Orientable ptr o
+    as Position ptr p
+    as Orientation ptr o
     as Dimensions ptr d
     as Appearance ptr a
 end type
@@ -275,8 +375,8 @@ constructor ShipRenderSystem( e as Entities, c as Components )
   base( e, c )
   
   requires( "type:ship" )
-  m = requires( "movable" ) 
-  o = requires( "orientable" )
+  p = requires( "position" ) 
+  o = requires( "orientation" )
   d = requires( "dimensions" )
   a = requires( "appearance" )
 end constructor
@@ -285,7 +385,7 @@ destructor ShipRenderSystem() : end destructor
 
 sub ShipRenderSystem.process( dt as double = 0.0d )
   for each e as Entity in processed
-    with m[ e ]
+    with p[ e ]
       var _
         p0 = .pos + o[ e ].dir * d[ e ].size, _
         p1 = .pos + o[ e ].dir.turnedLeft() * ( d[ e ].size * 0.5f ), _
@@ -304,7 +404,7 @@ type AsteroidRenderSystem extends System
   declare sub process( as double = 0.0d ) override
   
   private:
-    as Movable ptr m
+    as Position ptr p
     as Dimensions ptr d
     as Appearance ptr a
 end type
@@ -313,7 +413,7 @@ constructor AsteroidRenderSystem( e as Entities, c as Components )
   base( e, c )
   
   requires( "type:asteroid" )
-  m = requires( "movable" )
+  p = requires( "position" )
   d = requires( "dimensions" )
   a = requires( "appearance" )
 end constructor
@@ -322,7 +422,7 @@ destructor AsteroidRenderSystem() : end destructor
 
 sub AsteroidRenderSystem.process( dt as double = 0.0d )
   for each e as Entity in processed
-    with m[ e ]
+    with p[ e ]
       circle( .pos.x, .pos.y ), d[ e ].size, a[ e ].color, , , , f
     end with
   next
@@ -335,7 +435,7 @@ type BulletRenderSystem extends System
   declare sub process( as double = 0.0d ) override
   
   private:
-    as Movable ptr m
+    as Position ptr p
     as Physics ptr ph
 end type
 
@@ -343,7 +443,7 @@ constructor BulletRenderSystem( e as Entities, c as Components )
   base( e, c )
   
   requires( "type:bullet" )
-  m = requires( "movable" )
+  p = requires( "position" )
   ph = requires( "physics" )
 end constructor
 
@@ -351,9 +451,10 @@ destructor BulletRenderSystem() : end destructor
 
 sub BulletRenderSystem.process( dt as double = 0.0d )
   for each e as Entity in processed
-    var ep = m[ e ].pos - ( ph[ e ].vel.normalized() * 8 )
-    
-    line( m[ e ].pos.x, m[ e ].pos.y ) - ( ep.x, ep.y ), WHITE
-    circle( m[ e ].pos.x, m[ e ].pos.y ), 3, RED, , , , f
+    with p[ e ]
+      circle( .pos.x, .pos.y ), 4, BLUE
+      circle( .pos.x, .pos.y ), 3, rgb( 168, 228, 251 )
+      circle( .pos.x, .pos.y ), 2, WHITE, , , , f
+    end with
   next
 end sub

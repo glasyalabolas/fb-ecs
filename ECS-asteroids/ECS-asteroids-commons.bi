@@ -71,5 +71,5 @@ sub Game.init( xRes as long, yRes as long )
   
   randomize()
   
-  playArea = BoundingBox( -20, -20, xRes + 20, yRes + 20 )
+  playArea = BoundingBox( -40, -40, xRes + 40, yRes + 40 )
 end sub

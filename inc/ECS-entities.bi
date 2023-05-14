@@ -1,10 +1,6 @@
 #ifndef __ECS_ENTITIES__
 #define __ECS_ENTITIES__
 
-/'
-  BUGS
-  
-'/
 #include once "fb-hashtable.bi"
 
 const as long INVALID_ENTITY = -1
