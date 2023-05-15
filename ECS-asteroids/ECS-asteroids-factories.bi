@@ -20,7 +20,7 @@ function createShip( e as Entities, c as Components ) as Entity
   withComponent( ControlParameters, c.addComponent( pship, "controlparameters" ) )
     .accel = 550.0f
     .turnSpeed = 360.0f
-    .rateOfFire = 100.0f
+    .rateOfFire = 50.0f
   end with
   
   withComponent( Controls, c.addComponent( pship, "controls" ) )
@@ -53,27 +53,25 @@ function createPlayer( e as Entities, c as Components ) as Entity
   return( player )
 end function
 
-function createAsteroid( e as Entities, c as Components ) as Entity
+function createAsteroid( e as Entities, c as Components, p as Vec2, v as Vec2, s as single ) as Entity
   var asteroid = e.create()
   
-  dim as single size = rng( 8.0f, 40.0f )
-  
   asComponent( Position, c.addComponent( asteroid, "position" ) ) _
-    .pos = rngWithin( Game.playArea )
+    .pos = p
   
   withComponent( Physics, c.addComponent( asteroid, "physics" ) )
-    .vel = Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f )
-    .maxSpeed = 100.0f
+    .vel = v
+    .maxSpeed = 300.0f
   end with
   
   asComponent( Dimensions, c.addComponent( asteroid, "dimensions" ) ) _
-    .size = size
+    .size = s
   asComponent( Appearance, c.addComponent( asteroid, "appearance" ) ) _
     .color = RED
   asComponent( Health, c.addComponent( asteroid, "health" ) ) _
-    .value = 10.0f * size
+    .value = 5.0f * s
   asComponent( Collision, c.addComponent( asteroid, "collision" ) ) _
-    .radius = size
+    .radius = s
   
   c.addComponent( asteroid, "type:asteroid" )
   
@@ -82,7 +80,12 @@ end function
 
 sub createAsteroids( e as Entities, c as Components, count as long )
   for i as integer = 1 to count
-    createAsteroid( e, c )
+    dim as single size = rng( 8.0f, 40.0f )
+    
+    createAsteroid( e, c, _
+      rngWithin( Game.playArea ), _
+      Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f ), _
+      size )
   next
 end sub
 

@@ -9,22 +9,21 @@ type System extends Object
     
     declare property processed() byref as UnorderedList
     
-    declare abstract sub process( as double = 0.0d )
-    
     declare function getDebugInfo() as string
+    
+    declare virtual sub process( as double = 0.0d )
     
   protected:
     declare constructor()
     declare constructor( as Entities, as Components )
     
-    declare property entityCount() as long
-    
-    declare function getEntities() byref as Entities
-    declare function getComponents() byref as Components
+    declare property myEntities() byref as Entities
+    declare property myComponents() byref as Components
+    'declare function getEntities() byref as Entities
+    'declare function getComponents() byref as Components
     
     declare function requires( as string ) as any ptr
     declare function has( as string ) as any ptr
-    
     declare function contains( as Entity, as string ) as boolean
     
   private:
@@ -92,17 +91,13 @@ property System.processed() byref as UnorderedList
   return( _processed )
 end property
 
-property System.entityCount() as long
-  return( _processed.count )
+property System.myEntities() byref as Entities
+  return( *_entities )
 end property
 
-function System.getEntities() byref as Entities
-  return( *_entities )
-end function
-
-function System.getComponents() byref as Components
+property System.myComponents() byref as Components
   return( *_components )
-end function
+end property
 
 function System.requires( c as string ) as any ptr
   dim as ComponentID id = _components->getID( c )
@@ -190,5 +185,7 @@ sub System.system_componentRemoved( _
     end if
   end if
 end sub
+
+sub System.process( dt as double = 0.0d ) : end sub
 
 #endif

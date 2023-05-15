@@ -6,8 +6,8 @@
 '' Type alias for event IDs
 type as long EventID
 
-'' Global events
-enum ECS_GLOBAL_EVENT
+'' ECS events
+enum ECS_EVENT
   EV_ENTITYCREATED = 1
   EV_ENTITYDESTROYED
   EV_COMPONENTADDED
@@ -173,6 +173,7 @@ sub Events.raise( eID as EventID, p as EventArgs, sender as any ptr = 0 )
   end if
 end sub
 
+'' ECS framework events
 type EntityChangedEventArgs extends EventArgs
   declare constructor( as Entity )
   

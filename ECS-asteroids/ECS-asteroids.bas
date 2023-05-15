@@ -68,9 +68,11 @@ var br = BulletRenderSystem( AEntities, AComponents )
 var coll = CollidableSystem( Aentities, AComponents )
 var sht = ShootableSystem( AEntities, AComponents )
 var hlt = HealthSystem( AEntities, AComponents )
+var asd = AsteroidDestroyedSystem( AEntities, AComponents )
 
-createAsteroids( AEntities, AComponents, 50 )
+'' Create entities
 createPlayer( AEntities, AComponents )
+createAsteroids( AEntities, AComponents, 30 )
 
 dim as double dt, updateTime, updateTotal, renderTime, renderTotal, frameTime
 dim as ulongint count

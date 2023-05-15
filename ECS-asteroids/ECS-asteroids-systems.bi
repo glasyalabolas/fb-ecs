@@ -1,3 +1,19 @@
+enum GAME_EVENTS
+  EV_GAME_ENTITYDESTROYED = 1000
+end enum
+
+type GameEntityDestroyedEventArgs extends EventArgs
+  declare constructor( as Entity, as Entities, as Components )
+  
+  as Entity eID
+  as Entities ptr e
+  as Components ptr c
+end type
+
+constructor GameEntityDestroyedEventArgs( _entity as Entity, _e as Entities, _c as Components )
+  eID = _entity : e = @_e : c = @_c
+end constructor
+
 sub move( m as Position, p as Physics, dt as double )
   if( p.vel.lengthSq() > p.maxSpeed ^ 2 ) then
     p.vel = p.vel.normalized() * p.maxSpeed
@@ -119,11 +135,11 @@ sub ControllableSystem.process( dt as double = 0.0d )
       end if
       
       if( Game.keyboard.pressed( .fire ) ) then
-        shoot( getEntities(), getComponents(), p[ e ], o[ e ], ph[ e ], dt )
+        shoot( myEntities, myComponents, p[ e ], o[ e ], ph[ e ], dt )
       end if
       
       if( Game.keyboard.repeated( .fire, params[ e ].rateOfFire ) ) then
-        shoot( getEntities(), getComponents(), p[ e ], o[ e ], ph[ e ], dt )
+        shoot( myEntities, myComponents, p[ e ], o[ e ], ph[ e ], dt )
       end if
     end with
   next
@@ -159,7 +175,7 @@ sub LifetimeSystem.process( dt as double = 0.0d )
   next
   
   for i as integer = 0 to deleted.count - 1
-    getEntities().destroy( deleted[ i ] )
+    myEntities.destroy( deleted[ i ] )
   next
 end sub
 
@@ -354,8 +370,53 @@ sub HealthSystem.process( dt as double = 0.0d )
   next
   
   for each e as Entity in destroyed
-    getEntities().destroy( e )
+    ECS.raiseEvent( EV_GAME_ENTITYDESTROYED, _
+      GameEntityDestroyedEventArgs( e, myEntities, myComponents ), @this )
+    
+    myEntities.destroy( e )
   next
+end sub
+
+type AsteroidDestroyedSystem extends System
+  declare constructor( as Entities, as Components )
+  declare destructor() override
+  
+  private:
+    declare static sub asteroidDestroyed_gameEntityDestroyed( _
+      as any ptr, as GameEntityDestroyedEventArgs, as AsteroidDestroyedSystem ptr )
+    
+    as Position ptr p
+    as Dimensions ptr d
+end type
+
+constructor AsteroidDestroyedSystem( e as Entities, c as Components )
+  base( e, c )
+  
+  ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( asteroidDestroyed_gameEntityDestroyed ), @this )
+  
+  p = cast( Position ptr, myComponents[ "position" ] )
+  d = cast( Dimensions ptr,myComponents[ "dimensions" ] )
+end constructor
+
+destructor AsteroidDestroyedSystem()
+  ECS.unregisterListener( EV_GAME_ENTITYDESTROYED, toHandler( asteroidDestroyed_gameEntityDestroyed ), @this )
+end destructor
+
+sub AsteroidDestroyedSystem.asteroidDestroyed_gameEntityDestroyed( _
+  sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as AsteroidDestroyedSystem ptr )
+  
+  if( e.c->hasComponent( e.eID, e.c->getID( "type:asteroid" ) ) ) then
+    var p = receiver->p[ e.eID ].pos
+    var s = receiver->d[ e.eID ].size
+    
+    dim as single size = s * 0.25
+    
+    if( size >= 4.0f ) then
+      for i as integer = 1 to 4
+        createAsteroid( *e.e, *e.c, p, rndNormal() * ( 400.0f - size * 10.0f ), size )
+      next
+    end if
+  end if
 end sub
 
 type ShipRenderSystem extends System

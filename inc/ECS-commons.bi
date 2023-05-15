@@ -6,7 +6,6 @@ const as long ECS_MAX_COMPONENTS = 200
 const as long ECS_MAX_COMPONENTS_PER_ENTITY = 32
 
 type as short Entity
-type as short ECS_EVENT
 type as short ComponentID
 type as string DATA_BUFFER
 
