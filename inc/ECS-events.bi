@@ -1,5 +1,5 @@
-#ifndef __ECS_EVENTS__
-#define __ECS_EVENTS__
+#ifndef __FB_ECS_EVENTS__
+#define __FB_ECS_EVENTS__
 
 #include once "fb-linkedlist.bi"
 

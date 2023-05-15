@@ -1,5 +1,5 @@
-#ifndef __ECS_SYSTEM__
-#define __ECS_SYSTEM__
+#ifndef __FB_ECS_SYSTEM__
+#define __FB_ECS_SYSTEM__
 
 #include once "unordered-list.bi"
 
@@ -19,19 +19,17 @@ type System extends Object
     
     declare property myEntities() byref as Entities
     declare property myComponents() byref as Components
-    'declare function getEntities() byref as Entities
-    'declare function getComponents() byref as Components
     
     declare function requires( as string ) as any ptr
     declare function has( as string ) as any ptr
     declare function contains( as Entity, as string ) as boolean
     
   private:
-    declare static sub system_entityDestroyed( _
+    declare static sub event_entityDestroyed( _
       as any ptr, as EntityChangedEventArgs, as System ptr )
-    declare static sub system_componentAdded( _
+    declare static sub event_componentAdded( _
       as any ptr, as ComponentChangedEventArgs, as System ptr )
-    declare static sub system_componentRemoved( _
+    declare static sub event_componentRemoved( _
       as any ptr, as ComponentChangedEventArgs, as System ptr )
     
     declare function isRequired( as ComponentID ) as boolean
@@ -52,9 +50,9 @@ end type
 constructor System() : end constructor
 
 constructor System( e as Entities, c as Components )
-  ECS.registerListener( EV_ENTITYDESTROYED, toHandler( System.system_entityDestroyed ), @this )
-  ECS.registerListener( EV_COMPONENTADDED, toHandler( System.system_componentAdded ), @this )
-  ECS.registerListener( EV_COMPONENTREMOVED, toHandler( System.system_componentRemoved ), @this )
+  ECS.registerListener( EV_ENTITYDESTROYED, toHandler( System.event_entityDestroyed ), @this )
+  ECS.registerListener( EV_COMPONENTADDED, toHandler( System.event_componentAdded ), @this )
+  ECS.registerListener( EV_COMPONENTREMOVED, toHandler( System.event_componentRemoved ), @this )
   
   redim _required( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
   redim _has( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
@@ -66,9 +64,9 @@ constructor System( e as Entities, c as Components )
 end constructor
 
 destructor System()
-  ECS.unregisterListener( EV_ENTITYDESTROYED, toHandler( System.system_entityDestroyed ), @this )
-  ECS.unregisterListener( EV_COMPONENTADDED, toHandler( System.system_componentAdded ), @this )
-  ECS.unregisterListener( EV_COMPONENTREMOVED, toHandler( System.system_componentRemoved ), @this )
+  ECS.unregisterListener( EV_ENTITYDESTROYED, toHandler( System.event_entityDestroyed ), @this )
+  ECS.unregisterListener( EV_COMPONENTADDED, toHandler( System.event_componentAdded ), @this )
+  ECS.unregisterListener( EV_COMPONENTREMOVED, toHandler( System.event_componentRemoved ), @this )
   
   erase( _required )
   erase( _has )
@@ -149,7 +147,7 @@ function System.hasOptionalComponent( e as Entity ) as boolean
   return( cbool( count > 0 ) andAlso _hasCount > 0 )
 end function
 
-sub System.system_entityDestroyed( _
+sub System.event_entityDestroyed( _
   sender as any ptr, e as EntityChangedEventArgs, receiver as System ptr )
   
   if( sender = receiver->_entities ) then
@@ -162,7 +160,7 @@ sub System.system_entityDestroyed( _
   end if
 end sub
 
-sub System.system_componentAdded( _
+sub System.event_componentAdded( _
   sender as any ptr, e as ComponentChangedEventArgs, receiver as System ptr )
   
   if( sender = receiver->_components ) then
@@ -175,7 +173,7 @@ sub System.system_componentAdded( _
   end if
 end sub
 
-sub System.system_componentRemoved( _
+sub System.event_componentRemoved( _
   sender as any ptr, e as ComponentChangedEventArgs, receiver as System ptr )
   
   if( sender = receiver->_components ) then

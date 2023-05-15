@@ -1,5 +1,5 @@
-#ifndef __ECS_COMMONS__
-#define __ECS_COMMONS__
+#ifndef __FB_ECS_COMMONS__
+#define __FB_ECS_COMMONS__
 
 const as long ECS_MAX_ENTITIES = 5000
 const as long ECS_MAX_COMPONENTS = 200

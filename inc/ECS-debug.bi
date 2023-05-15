@@ -1,5 +1,5 @@
-#ifndef __ECS_DEBUG__
-#define __ECS_DEBUG__
+#ifndef __FB_ECS_DEBUG__
+#define __FB_ECS_DEBUG__
 
 type Debug extends Object
   declare static sub toFile( as string )

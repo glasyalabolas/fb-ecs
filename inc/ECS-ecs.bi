@@ -1,7 +1,5 @@
-#ifndef __ECS_ECS__
-#define __ECS_ECS__
-
-#include once "ECS-events.bi"
+#ifndef __FB_ECS_ECS__
+#define __FB_ECS_ECS__
 
 type ECS extends Object
   public:

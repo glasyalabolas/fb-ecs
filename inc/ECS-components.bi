@@ -1,5 +1,5 @@
-#ifndef __ECS_COMPONENTS__
-#define __ECS_COMPONENTS__
+#ifndef __FB_ECS_COMPONENTS__
+#define __FB_ECS_COMPONENTS__
 
 #include once "fb-hashtable.bi"
 
@@ -40,8 +40,8 @@ type Components extends Object
     declare function addComponent( as Entity, as string ) as any ptr
     declare function removeComponent( as Entity, as ComponentID ) as boolean
     declare function removeComponent( as Entity, as string ) as boolean
-    
     declare function hasComponent( as Entity, as ComponentID ) as boolean
+    declare function hasComponent( as Entity, as string ) as boolean
     
     declare function getDebugInfo() as string
     
@@ -235,6 +235,10 @@ end function
 
 function Components.hasComponent( e as Entity, c as ComponentID ) as boolean
   return( _componentMap( e, c ) )
+end function
+
+function Components.hasComponent( e as Entity, c as string ) as boolean
+  return( hasComponent( e, getID( c ) ) )
 end function
 
 sub Components.components_entityDestroyed( _

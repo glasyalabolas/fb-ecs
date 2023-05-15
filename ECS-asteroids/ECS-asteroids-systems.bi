@@ -333,7 +333,7 @@ sub ShootableSystem.process( dt as double = 0.0d )
       
       if( bbb.overlapsWith( abb ) ) then
         '' Collided
-        circle( abb.center.x, abb.center.y ), d[ a ].size, rgb( 0, 0, 255 ), , , , f
+        circle( abb.center.x, abb.center.y ), d[ a ].size, WHITE, , , , f
         
         lt[ b ].value = 0.0f
         h[ a ].value -= 30.0f
@@ -382,7 +382,7 @@ type AsteroidDestroyedSystem extends System
   declare destructor() override
   
   private:
-    declare static sub asteroidDestroyed_gameEntityDestroyed( _
+    declare static sub event_gameEntityDestroyed( _
       as any ptr, as GameEntityDestroyedEventArgs, as AsteroidDestroyedSystem ptr )
     
     as Position ptr p
@@ -392,20 +392,20 @@ end type
 constructor AsteroidDestroyedSystem( e as Entities, c as Components )
   base( e, c )
   
-  ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( asteroidDestroyed_gameEntityDestroyed ), @this )
+  ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
   
   p = cast( Position ptr, myComponents[ "position" ] )
   d = cast( Dimensions ptr,myComponents[ "dimensions" ] )
 end constructor
 
 destructor AsteroidDestroyedSystem()
-  ECS.unregisterListener( EV_GAME_ENTITYDESTROYED, toHandler( asteroidDestroyed_gameEntityDestroyed ), @this )
+  ECS.unregisterListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
 end destructor
 
-sub AsteroidDestroyedSystem.asteroidDestroyed_gameEntityDestroyed( _
+sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as AsteroidDestroyedSystem ptr )
   
-  if( e.c->hasComponent( e.eID, e.c->getID( "type:asteroid" ) ) ) then
+  if( e.c->hasComponent( e.eID, "type:asteroid" ) ) then
     var p = receiver->p[ e.eID ].pos
     var s = receiver->d[ e.eID ].size
     
@@ -417,6 +417,33 @@ sub AsteroidDestroyedSystem.asteroidDestroyed_gameEntityDestroyed( _
       next
     end if
   end if
+end sub
+
+type ScoreSystem extends System
+  declare constructor( as Entities, as Components )
+  declare destructor() override
+  
+  private:
+    declare static sub event_gameEntityDestroyed( _
+      as any ptr, as GameEntityDestroyedEventArgs, as ScoreSystem ptr )
+    
+    as Score ptr sc
+end type
+
+constructor ScoreSystem( e as Entities, c as Components )
+  base( e, c )
+  
+  ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+end constructor
+
+destructor ScoreSystem()
+  ECS.unregisterListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+end destructor
+
+sub ScoreSystem.event_gameEntityDestroyed( _
+  sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as ScoreSystem ptr )
+  
+  '' TODO
 end sub
 
 type ShipRenderSystem extends System

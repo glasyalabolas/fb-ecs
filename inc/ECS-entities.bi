@@ -1,5 +1,5 @@
-#ifndef __ECS_ENTITIES__
-#define __ECS_ENTITIES__
+#ifndef __FB_ECS_ENTITIES__
+#define __FB_ECS_ENTITIES__
 
 #include once "fb-hashtable.bi"
 

@@ -34,41 +34,23 @@ Debug.print( "Registering components..." )
   AComponents.register( "type:bullet" )
 Debug.print( "Done" )
 
-#macro debugComponent( _n_ )
-  Debug.print( _n_ & ": " & AComponents.getID( _n_ ) )
-#endmacro
-
-Debug.print( "Components:" )
-debugComponent( "position" )
-debugComponent( "orientation" )
-debugComponent( "physics" )
-debugComponent( "appearance" )
-debugComponent( "dimensions" )
-debugComponent( "controls" )
-debugComponent( "health" )
-debugComponent( "score" )
-debugComponent( "speed" )
-debugComponent( "lifetime" )
-debugComponent( "collision" )
-debugComponent( "ship" )
-debugComponent( "controlparameters" )
-
 /'
   Main code
 '/
 Game.init( 800, 600 )
 
 '' Instantiate systems before creating entities
-var lt = LifetimeSystem( AEntities, AComponents )
-var r = ShipRenderSystem( AEntities, AComponents )
-var ar = AsteroidRenderSystem( AEntities, AComponents )
-var m = MovableSystem( AEntities, AComponents )
-var ctrl = ControllableSystem( AEntities, AComponents )
-var br = BulletRenderSystem( AEntities, AComponents )
-var coll = CollidableSystem( Aentities, AComponents )
-var sht = ShootableSystem( AEntities, AComponents )
-var hlt = HealthSystem( AEntities, AComponents )
-var asd = AsteroidDestroyedSystem( AEntities, AComponents )
+var s_lifetime = LifetimeSystem( AEntities, AComponents )
+var s_renderShip = ShipRenderSystem( AEntities, AComponents )
+var s_renderAsteroids = AsteroidRenderSystem( AEntities, AComponents )
+var s_renderBullets = BulletRenderSystem( AEntities, AComponents )
+var s_move = MovableSystem( AEntities, AComponents )
+var s_control = ControllableSystem( AEntities, AComponents )
+var s_collision = CollidableSystem( Aentities, AComponents )
+var s_shoot = ShootableSystem( AEntities, AComponents )
+var s_health = HealthSystem( AEntities, AComponents )
+var s_destroyAsteroid = AsteroidDestroyedSystem( AEntities, AComponents )
+var s_score = ScoreSystem( AEntities, AComponents )
 
 '' Create entities
 createPlayer( AEntities, AComponents )
@@ -100,11 +82,11 @@ do
   updateTime = timer()
   
   '' Update
-  lt.process( dt )
-  hlt.process( dt )
-  ctrl.process( dt )
-  m.process( dt )
-  coll.process( dt )
+  s_lifetime.process( dt )
+  s_health.process( dt )
+  s_control.process( dt )
+  s_move.process( dt )
+  s_collision.process( dt )
   
   updateTime = timer() - updateTime
   updateTotal += updateTime
@@ -113,10 +95,10 @@ do
   dt = timer()
     renderTime = timer()
     cls()
-      br.process()
-      r.process()
-      ar.process()
-      sht.process()
+      s_renderBullets.process()
+      s_renderShip.process()
+      s_renderAsteroids.process()
+      s_shoot.process()
       
       ? "FPS: " & int( 1 / ( frameTime  / count ) )
       ? "Update: " & int( 1 / ( updateTotal / count ) ) & " (" & int( ( updateTotal / frameTime ) * 100 ) & "%)"
