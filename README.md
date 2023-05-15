@@ -1,2 +1,2 @@
 # fb-ecs
-An Entity-Component-System (ECS) implementation in FreeBasic
+An Entity Component System (ECS) implementation in FreeBasic
