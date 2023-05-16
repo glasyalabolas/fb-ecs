@@ -4,7 +4,7 @@
 #include once "fb-linkedlist.bi"
 
 '' Type alias for event IDs
-type as long EventID
+type as long Event
 
 '' ECS events
 enum ECS_EVENT
@@ -36,7 +36,7 @@ end constructor
 
 '' Internal table; no need to mess with this
 type EventTableEntry
-  as EventID eID
+  as Event eID
   as Fb.LinkedList listeners
   as long idx
 end type
@@ -48,15 +48,15 @@ type Events
     declare destructor()
     
     declare function registerListener( _
-      as EventID, as ECSEventHandler, as any ptr = 0 ) as boolean
+      as Event, as ECSEventHandler, as any ptr = 0 ) as boolean
     declare function unregisterListener( _
-      as EventID, as ECSEventHandler, as any ptr = 0 ) as boolean
-    declare sub raise( as EventID, as EventArgs, as any ptr = 0 )
+      as Event, as ECSEventHandler, as any ptr = 0 ) as boolean
+    declare sub raise( as Event, as EventArgs, as any ptr = 0 )
   
   private:
     declare static function hash( as ulong ) as ulong
     
-    declare function find( as EventID ) as EventTableEntry ptr
+    declare function find( as Event ) as EventTableEntry ptr
     
     as EventTableEntry _bucket( any )
     as long _entry( any ), _size, _count
@@ -93,7 +93,7 @@ function Events.hash( x as ulong ) as ulong
   return( ( x shr 16 ) xor x )
 end function
 
-function Events.find( eID as EventID ) as EventTableEntry ptr
+function Events.find( eID as Event ) as EventTableEntry ptr
   dim as ulong h = hash( eID ) mod _size
   dim as long current = _entry( h )
   
@@ -109,7 +109,7 @@ function Events.find( eID as EventID ) as EventTableEntry ptr
 end function
 
 function Events.registerListener( _
-  eID as EventID, handler as ECSEventHandler, receiver as any ptr = 0 ) as boolean
+  eID as Event, handler as ECSEventHandler, receiver as any ptr = 0 ) as boolean
   
   var e = find( eID )
   
@@ -137,7 +137,7 @@ function Events.registerListener( _
 end function
 
 function Events.unregisterListener( _
-  eID as EventID, handler as ECSEventHandler, receiver as any ptr = 0 ) as boolean
+  eID as Event, handler as ECSEventHandler, receiver as any ptr = 0 ) as boolean
   
   var e = find( eID )
   
@@ -158,7 +158,7 @@ function Events.unregisterListener( _
   return( false )
 end function
 
-sub Events.raise( eID as EventID, p as EventArgs, sender as any ptr = 0 )
+sub Events.raise( eID as Event, p as EventArgs, sender as any ptr = 0 )
   var e = find( eID )
   
   if( e <> 0 ) then

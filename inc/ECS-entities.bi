@@ -19,6 +19,7 @@ type Entities extends Object
     declare function create() as Entity
     declare function create( as string ) as Entity
     declare function find( as string ) as Entity
+    declare function getName( as Entity ) as string
     declare function destroy( as Entity ) as Entity
     
     declare function getInfo() as string
@@ -81,6 +82,8 @@ end function
 
 function Entities.create( n as string ) as Entity
   dim as Entity e = create()
+
+  _entities( e ).name = n
   _entityMap->add( n, @_entities( e ) )
   
   return( e )
@@ -90,6 +93,10 @@ function Entities.find( n as string ) as Entity
   var entry = cast( EntityTableEntry ptr, _entityMap->find( n ) )
   
   return( iif( entry, entry->id, ENTITY_NOT_FOUND ) )
+end function
+
+function Entities.getName( e as Entity ) as string
+  return( _entities( e ).name )
 end function
 
 function Entities.destroy( e as Entity ) as Entity

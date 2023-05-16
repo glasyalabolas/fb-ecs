@@ -54,3 +54,6 @@ type Collision
   as single radius
 end type
 
+type Owner
+  as Entity id
+end type

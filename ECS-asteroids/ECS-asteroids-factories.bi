@@ -1,4 +1,4 @@
-function createShip( e as Entities, c as Components ) as Entity
+function createShip( e as Entities, c as Components, owner as Entity ) as Entity
   var pship = e.create( "playership" )
   
   asComponent( Position, c.addComponent( pship, "position" ) ) _
@@ -34,6 +34,8 @@ function createShip( e as Entities, c as Components ) as Entity
   
   asComponent( Collision, c.addComponent( pship, "collision" ) ) _
     .radius = 5.0f
+  asComponent( Owner, c.addComponent( pship, "owner" ) ) _
+    .id = owner
   
   c.addComponent( pship, "type:ship" )
   
@@ -47,8 +49,6 @@ function createPlayer( e as Entities, c as Components ) as Entity
     .value = 1000.0f
   asComponent( Score, c.addComponent( player, "score" ) ) _
     .value = 0
-  asComponent( Ship, c.addComponent( player, "ship" ) ) _
-    .shipID = createShip( e, c )
   
   return( player )
 end function
@@ -89,7 +89,9 @@ sub createAsteroids( e as Entities, c as Components, count as long )
   next
 end sub
 
-function createBullet( e as Entities, c as Components, p as Vec2, vel as Vec2, spd as single, lt as single ) as Entity
+function createBullet( _
+  e as Entities, c as Components, p as Vec2, vel as Vec2, spd as single, lt as single, owner as Entity ) as Entity
+  
   var bullet = e.create()
   
   asComponent( Position, c.addComponent( bullet, "position" ) ) _
@@ -104,6 +106,8 @@ function createBullet( e as Entities, c as Components, p as Vec2, vel as Vec2, s
     .size = 4.0f
   asComponent( Lifetime, c.addComponent( bullet, "lifetime" ) ) _
     .value = lt
+  asComponent( Owner, c.addComponent( bullet, "owner" ) ) _
+    .id = owner
   
   c.addComponent( bullet, "type:bullet" )
   

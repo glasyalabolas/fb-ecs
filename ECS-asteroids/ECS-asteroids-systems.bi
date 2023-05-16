@@ -3,15 +3,15 @@ enum GAME_EVENTS
 end enum
 
 type GameEntityDestroyedEventArgs extends EventArgs
-  declare constructor( as Entity, as Entities, as Components )
+  declare constructor( as Entity, as Entity, as Entities, as Components )
   
-  as Entity eID
+  as Entity destroyed, author
   as Entities ptr e
   as Components ptr c
 end type
 
-constructor GameEntityDestroyedEventArgs( _entity as Entity, _e as Entities, _c as Components )
-  eID = _entity : e = @_e : c = @_c
+constructor GameEntityDestroyedEventArgs( d as Entity, a as Entity, ent as Entities, com as Components )
+  destroyed = d : author = a : e = @ent : c = @com
 end constructor
 
 sub move( m as Position, p as Physics, dt as double )
@@ -62,13 +62,13 @@ sub rotate( o as Orientation, a as single )
 end sub
 
 sub shoot( e as Entities, c as Components, _
-  m as Position, o as Orientation, ph as Physics, dt as double )
+  m as Position, o as Orientation, ph as Physics, owner as Entity, dt as double )
   
   '' Choose a random direction arc
   var vel = o.dir.rotated( rad( rng( -3.0f, 3.0f ) ) ).normalize()
   
   '' Spawn bullet
-  createBullet( e, c, m.pos, vel, 500.0f, 2000.0f )
+  createBullet( e, c, m.pos, vel, 500.0f, 2000.0f, owner )
   
   '' Add a little backwards acceleration to the shooting entity
   '' when firing.
@@ -135,11 +135,11 @@ sub ControllableSystem.process( dt as double = 0.0d )
       end if
       
       if( Game.keyboard.pressed( .fire ) ) then
-        shoot( myEntities, myComponents, p[ e ], o[ e ], ph[ e ], dt )
+        shoot( myEntities, myComponents, p[ e ], o[ e ], ph[ e ], e, dt )
       end if
       
       if( Game.keyboard.repeated( .fire, params[ e ].rateOfFire ) ) then
-        shoot( myEntities, myComponents, p[ e ], o[ e ], ph[ e ], dt )
+        shoot( myEntities, myComponents, p[ e ], o[ e ], ph[ e ], e, dt )
       end if
     end with
   next
@@ -288,6 +288,7 @@ type ShootableSystem extends System
     as Dimensions ptr d
     as Lifetime ptr lt
     as Health ptr h
+    as Owner ptr ow
 end type
 
 constructor ShootableSystem( e as Entities, c as Components )
@@ -300,6 +301,8 @@ constructor ShootableSystem( e as Entities, c as Components )
   h = has( "health" )
   p = requires( "position" )
   d = requires( "dimensions" )
+  
+  ow = myComponents[ "owner" ]
 end constructor
 
 destructor ShootableSystem() : end destructor
@@ -337,6 +340,12 @@ sub ShootableSystem.process( dt as double = 0.0d )
         
         lt[ b ].value = 0.0f
         h[ a ].value -= 30.0f
+        
+        '' Did we destroy the asteroid?
+        if( h[ a ].value < 0.0f ) then
+          ECS.raiseEvent( EV_GAME_ENTITYDESTROYED, _
+            GameEntityDestroyedEventArgs( a, ow[ b ].id, myEntities, myComponents ), @this )
+        end if
       end if 
     next
   next
@@ -370,9 +379,6 @@ sub HealthSystem.process( dt as double = 0.0d )
   next
   
   for each e as Entity in destroyed
-    ECS.raiseEvent( EV_GAME_ENTITYDESTROYED, _
-      GameEntityDestroyedEventArgs( e, myEntities, myComponents ), @this )
-    
     myEntities.destroy( e )
   next
 end sub
@@ -405,9 +411,9 @@ end destructor
 sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as AsteroidDestroyedSystem ptr )
   
-  if( e.c->hasComponent( e.eID, "type:asteroid" ) ) then
-    var p = receiver->p[ e.eID ].pos
-    var s = receiver->d[ e.eID ].size
+  if( e.c->hasComponent( e.destroyed, "type:asteroid" ) ) then
+    var p = receiver->p[ e.destroyed ].pos
+    var s = receiver->d[ e.destroyed ].size
     
     dim as single size = s * 0.25
     
@@ -416,6 +422,9 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
         createAsteroid( *e.e, *e.c, p, rndNormal() * ( 400.0f - size * 10.0f ), size )
       next
     end if
+    
+    Debug.print( "I was killed by: " & e.e->getName( e.author ) )
+    Debug.print( "Its owner is: " & e.e->getName( cast( Owner ptr, ( *e.c )[ "owner" ] )[ e.author ].id ) )
   end if
 end sub
 

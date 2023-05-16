@@ -11,27 +11,28 @@ using FbGame
 Debug.toConsole()
 
 Debug.print( "Creating entities and components..." )
-  var AEntities = Entities(), AComponents = Components( AEntities )
+  var myEntities = Entities(), myComponents = Components( myEntities )
 Debug.print( "Done." )
 
 Debug.print( "Registering components..." )
-  registerComponent( AComponents, "position", Position )
-  registerComponent( AComponents, "orientation", Orientation )
-  registerComponent( AComponents, "physics", Physics )
-  registerComponent( AComponents, "appearance", Appearance )
-  registerComponent( AComponents, "dimensions", Dimensions )
-  registerComponent( AComponents, "controls", Controls )
-  registerComponent( AComponents, "health", Health )
-  registerComponent( AComponents, "score", Score )
-  registerComponent( AComponents, "speed", Speed )
-  registerComponent( AComponents, "lifetime", Lifetime )
-  registerComponent( AComponents, "ship", Ship )
-  registerComponent( AComponents, "controlparameters", ControlParameters )
-  registerComponent( AComponents, "collision", Collision )
+  registerComponent( myComponents, "position", Position )
+  registerComponent( myComponents, "orientation", Orientation )
+  registerComponent( myComponents, "physics", Physics )
+  registerComponent( myComponents, "appearance", Appearance )
+  registerComponent( myComponents, "dimensions", Dimensions )
+  registerComponent( myComponents, "controls", Controls )
+  registerComponent( myComponents, "health", Health )
+  registerComponent( myComponents, "score", Score )
+  registerComponent( myComponents, "speed", Speed )
+  registerComponent( myComponents, "lifetime", Lifetime )
+  registerComponent( myComponents, "ship", Ship )
+  registerComponent( myComponents, "controlparameters", ControlParameters )
+  registerComponent( myComponents, "collision", Collision )
+  registerComponent( myComponents, "owner", Owner )
   
-  AComponents.register( "type:ship" )
-  AComponents.register( "type:asteroid" )
-  AComponents.register( "type:bullet" )
+  myComponents.register( "type:ship" )
+  myComponents.register( "type:asteroid" )
+  myComponents.register( "type:bullet" )
 Debug.print( "Done" )
 
 /'
@@ -40,26 +41,29 @@ Debug.print( "Done" )
 Game.init( 800, 600 )
 
 '' Instantiate systems before creating entities
-var s_lifetime = LifetimeSystem( AEntities, AComponents )
-var s_renderShip = ShipRenderSystem( AEntities, AComponents )
-var s_renderAsteroids = AsteroidRenderSystem( AEntities, AComponents )
-var s_renderBullets = BulletRenderSystem( AEntities, AComponents )
-var s_move = MovableSystem( AEntities, AComponents )
-var s_control = ControllableSystem( AEntities, AComponents )
-var s_collision = CollidableSystem( Aentities, AComponents )
-var s_shoot = ShootableSystem( AEntities, AComponents )
-var s_health = HealthSystem( AEntities, AComponents )
-var s_destroyAsteroid = AsteroidDestroyedSystem( AEntities, AComponents )
-var s_score = ScoreSystem( AEntities, AComponents )
+var s_lifetime = LifetimeSystem( myEntities, myComponents )
+var s_renderShip = ShipRenderSystem( myEntities, myComponents )
+var s_renderAsteroids = AsteroidRenderSystem( myEntities, myComponents )
+var s_renderBullets = BulletRenderSystem( myEntities, myComponents )
+var s_move = MovableSystem( myEntities, myComponents )
+var s_control = ControllableSystem( myEntities, myComponents )
+var s_collision = CollidableSystem( myEntities, myComponents )
+var s_shoot = ShootableSystem( myEntities, myComponents )
+var s_health = HealthSystem( myEntities, myComponents )
+var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
+var s_score = ScoreSystem( myEntities, myComponents )
 
 '' Create entities
-createPlayer( AEntities, AComponents )
-createAsteroids( AEntities, AComponents, 30 )
+createPlayer( myEntities, myComponents )
+createShip( myEntities, myComponents, myEntities.find( "player" ) )
+createAsteroids( myEntities, myComponents, 30 )
 
 dim as double dt, updateTime, updateTotal, renderTime, renderTotal, frameTime
 dim as ulongint count
 
 dim as Fb.Event ev
+
+Debug.print( "Player ship ID: " & myEntities.find( "playership" ) )
 
 do
   count += 1
@@ -70,13 +74,13 @@ do
   loop
   
   if( Game.keyboard.pressed( Fb.SC_R ) ) then
-    var p = AEntities.find( "playership" )
-    AComponents.removeComponent( p, "controls" )
+    var p = myEntities.find( "playership" )
+    myComponents.removeComponent( p, "controls" )
   end if
   
   if( Game.keyboard.pressed( Fb.SC_A ) ) then
-    var p = AEntities.find( "playership" )
-    AComponents.addComponent( p, "controls" )
+    var p = myEntities.find( "playership" )
+    myComponents.addComponent( p, "controls" )
   end if
   
   updateTime = timer()
