@@ -1,4 +1,4 @@
-function createShip( e as ECSEntities, c as ECSComponents, owner as Entity ) as Entity
+function createShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as ECSEntity
   var pship = e.create( "playership" )
   
   asComponent( Position, c.addComponent( pship, "position" ) ) _
@@ -42,7 +42,7 @@ function createShip( e as ECSEntities, c as ECSComponents, owner as Entity ) as 
   return( pship )
 end function
 
-function createPlayer( e as ECSEntities, c as ECSComponents ) as Entity
+function createPlayer( e as ECSEntities, c as ECSComponents ) as ECSEntity
   var player = e.create( "player" )
   
   asComponent( Health, c.addComponent( player, "health" ) ) _
@@ -53,7 +53,7 @@ function createPlayer( e as ECSEntities, c as ECSComponents ) as Entity
   return( player )
 end function
 
-function createAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2, s as single ) as Entity
+function createAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2, s as single ) as ECSEntity
   var asteroid = e.create()
   
   asComponent( Position, c.addComponent( asteroid, "position" ) ) _
@@ -90,7 +90,7 @@ sub createAsteroids( e as ECSEntities, c as ECSComponents, count as long )
 end sub
 
 function createBullet( _
-  e as ECSEntities, c as ECSComponents, p as Vec2, vel as Vec2, spd as single, lt as single, owner as Entity ) as Entity
+  e as ECSEntities, c as ECSComponents, p as Vec2, vel as Vec2, spd as single, lt as single, owner as ECSEntity ) as ECSEntity
   
   var bullet = e.create()
   

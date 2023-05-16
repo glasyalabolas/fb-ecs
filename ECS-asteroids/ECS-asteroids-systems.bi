@@ -2,15 +2,15 @@ enum GAME_EVENTS
   EV_GAME_ENTITYDESTROYED = 1000
 end enum
 
-type GameEntityDestroyedEventArgs extends EventArgs
-  declare constructor( as Entity, as Entity, as ECSEntities, as ECSComponents )
+type GameEntityDestroyedEventArgs extends ECSEventArgs
+  declare constructor( as ECSEntity, as ECSEntity, as ECSEntities, as ECSComponents )
   
-  as Entity destroyed, author
+  as ECSEntity destroyed, author
   as ECSEntities ptr e
   as ECSComponents ptr c
 end type
 
-constructor GameEntityDestroyedEventArgs( d as Entity, a as Entity, ent as ECSEntities, com as ECSComponents )
+constructor GameEntityDestroyedEventArgs( d as ECSEntity, a as ECSEntity, ent as ECSEntities, com as ECSComponents )
   destroyed = d : author = a : e = @ent : c = @com
 end constructor
 
@@ -22,7 +22,7 @@ sub move( m as Position, p as Physics, dt as double )
   m.pos += p.vel * dt
 end sub
 
-type MovableSystem extends System
+type MovableSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -43,7 +43,7 @@ end constructor
 destructor MovableSystem() : end destructor
 
 sub MovableSystem.process( dt as double = 0.0d )
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     move( p[ e ], ph[ e ], dt )
     
     '' Wrap around play area
@@ -62,7 +62,7 @@ sub rotate( o as Orientation, a as single )
 end sub
 
 sub shoot( e as ECSEntities, c as ECSComponents, _
-  m as Position, o as Orientation, ph as Physics, owner as Entity, dt as double )
+  m as Position, o as Orientation, ph as Physics, owner as ECSEntity, dt as double )
   
   '' Choose a random direction arc
   var vel = o.dir.rotated( rad( rng( -3.0f, 3.0f ) ) ).normalize()
@@ -75,7 +75,7 @@ sub shoot( e as ECSEntities, c as ECSComponents, _
   accelerate( ph, -o.dir.normalized() * 400.0f * dt )
 end sub
 
-type ControllableSystem extends System
+type ControllableSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -102,7 +102,7 @@ end constructor
 destructor ControllableSystem() : end destructor
 
 sub ControllableSystem.process( dt as double = 0.0d )
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     with ctrl[ e ]
       dim as boolean strafing
       
@@ -145,7 +145,7 @@ sub ControllableSystem.process( dt as double = 0.0d )
   next
 end sub
 
-type LifetimeSystem extends System
+type LifetimeSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -166,7 +166,7 @@ destructor LifetimeSystem() : end destructor
 sub LifetimeSystem.process( dt as double = 0.0d )
   var deleted = UnorderedList( processed.count )
   
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     lt[ e ].value -= 1000.0f * dt
     
     if( lt[ e ].value < 0 ) then
@@ -179,7 +179,7 @@ sub LifetimeSystem.process( dt as double = 0.0d )
   next
 end sub
 
-type CollidableSystem extends System
+type CollidableSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -254,13 +254,13 @@ sub CollidableSystem.process( dt as double = 0.0d )
   var a2 = BoundingCircle()
   
   for i as integer = 0 to processed.count - 1
-    dim as Entity e1 = processed[ i ]
+    dim as ECSEntity e1 = processed[ i ]
     
     a1.center = p[ e1 ].pos
     a1.radius = coll[ e1 ].radius
     
     for j as integer = i + 1 to processed.count - 1
-      dim as Entity e2 = processed[ j ]
+      dim as ECSEntity e2 = processed[ j ]
       
       a2.center = p[ e2 ].pos
       a2.radius = coll[ e2 ].radius
@@ -276,7 +276,7 @@ sub CollidableSystem.process( dt as double = 0.0d )
   next
 end sub
 
-type ShootableSystem extends System
+type ShootableSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -310,7 +310,7 @@ destructor ShootableSystem() : end destructor
 sub ShootableSystem.process( dt as double = 0.0d )
   var bullets = UnorderedList( processed.count )
   
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     if( contains( e, "type:bullet" ) ) then
       bullets.add( e )
     end if
@@ -318,7 +318,7 @@ sub ShootableSystem.process( dt as double = 0.0d )
   
   var asteroids = UnorderedList( processed.count )
   
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     if( contains( e, "type:asteroid" ) ) then
       asteroids.add( e )
     end if
@@ -326,11 +326,11 @@ sub ShootableSystem.process( dt as double = 0.0d )
   
   var abb = BoundingCircle(), bbb = BoundingCircle()
   
-  for each b as Entity in bullets
+  for each b as ECSEntity in bullets
     bbb.center = p[ b ].pos
     bbb.radius = d[ b ].size
     
-    for each a as Entity in asteroids
+    for each a as ECSEntity in asteroids
       abb.center = p[ a ].pos
       abb.radius = d[ a ].size
       
@@ -351,7 +351,7 @@ sub ShootableSystem.process( dt as double = 0.0d )
   next
 end sub
 
-type HealthSystem extends System
+type HealthSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -372,18 +372,18 @@ destructor HealthSystem() : end destructor
 sub HealthSystem.process( dt as double = 0.0d )
   var destroyed = UnorderedList( processed.count )
   
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     if( h[ e ].value < 0.0f ) then
       destroyed.add( e )
     end if
   next
   
-  for each e as Entity in destroyed
+  for each e as ECSEntity in destroyed
     myEntities.destroy( e )
   next
 end sub
 
-type AsteroidDestroyedSystem extends System
+type AsteroidDestroyedSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -428,7 +428,7 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
   end if
 end sub
 
-type ScoreSystem extends System
+type ScoreSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -455,7 +455,7 @@ sub ScoreSystem.event_gameEntityDestroyed( _
   '' TODO
 end sub
 
-type ShipRenderSystem extends System
+type ShipRenderSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -481,7 +481,7 @@ end constructor
 destructor ShipRenderSystem() : end destructor
 
 sub ShipRenderSystem.process( dt as double = 0.0d )
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     with p[ e ]
       var _
         p0 = .pos + o[ e ].dir * d[ e ].size, _
@@ -494,7 +494,7 @@ sub ShipRenderSystem.process( dt as double = 0.0d )
   next
 end sub
 
-type AsteroidRenderSystem extends System
+type AsteroidRenderSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -518,14 +518,14 @@ end constructor
 destructor AsteroidRenderSystem() : end destructor
 
 sub AsteroidRenderSystem.process( dt as double = 0.0d )
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     with p[ e ]
       circle( .pos.x, .pos.y ), d[ e ].size, a[ e ].color, , , , f
     end with
   next
 end sub
 
-type BulletRenderSystem extends System
+type BulletRenderSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -547,7 +547,7 @@ end constructor
 destructor BulletRenderSystem() : end destructor
 
 sub BulletRenderSystem.process( dt as double = 0.0d )
-  for each e as Entity in processed
+  for each e as ECSEntity in processed
     with p[ e ]
       circle( .pos.x, .pos.y ), 4, BLUE
       circle( .pos.x, .pos.y ), 3, rgb( 168, 228, 251 )

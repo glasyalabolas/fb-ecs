@@ -7,9 +7,9 @@ const as long INVALID_COMPONENT = -1
 const as long COMPONENT_NOT_FOUND = -2
 
 type ECSComponentTableEntry
-  as ComponentID id
+  as ECSComponent id
   as uinteger size
-  as DATA_BUFFER value
+  as ECS_DATA_BUFFER value
   as string name
 end type
 
@@ -27,27 +27,27 @@ type ECSComponents extends Object
     declare constructor( as ECSEntities )
     declare destructor()
     
-    declare operator []( as ComponentID ) as any ptr
+    declare operator []( as ECSComponent ) as any ptr
     declare operator []( as string ) as any ptr
     
-    declare function registerComponent( as string, as uinteger ) as ComponentID
-    declare function registerComponent( as string ) as ComponentID
-    declare function getID( as string ) as ComponentID
-    declare function getName( as ComponentID ) as string
-    declare function getComponent( as Entity, as ComponentID ) as any ptr
-    declare function getComponent( as Entity, as string ) as any ptr
-    declare function addComponent( as Entity, as ComponentID ) as any ptr
-    declare function addComponent( as Entity, as string ) as any ptr
-    declare function removeComponent( as Entity, as ComponentID ) as boolean
-    declare function removeComponent( as Entity, as string ) as boolean
-    declare function hasComponent( as Entity, as ComponentID ) as boolean
-    declare function hasComponent( as Entity, as string ) as boolean
+    declare function registerComponent( as string, as uinteger ) as ECSComponent
+    declare function registerComponent( as string ) as ECSComponent
+    declare function getID( as string ) as ECSComponent
+    declare function getName( as ECSComponent ) as string
+    declare function getComponent( as ECSEntity, as ECSComponent ) as any ptr
+    declare function getComponent( as ECSEntity, as string ) as any ptr
+    declare function addComponent( as ECSEntity, as ECSComponent ) as any ptr
+    declare function addComponent( as ECSEntity, as string ) as any ptr
+    declare function removeComponent( as ECSEntity, as ECSComponent ) as boolean
+    declare function removeComponent( as ECSEntity, as string ) as boolean
+    declare function hasComponent( as ECSEntity, as ECSComponent ) as boolean
+    declare function hasComponent( as ECSEntity, as string ) as boolean
     
     declare function getDebugInfo() as string
     
   private:
     declare static sub event_entityDestroyed( _
-      as any ptr, as EntityChangedEventArgs, as ECSComponents ptr )
+      as any ptr, as ECSEntityChangedEventArgs, as ECSComponents ptr )
     
     as ECSComponentTableEntry _components( any )
     as boolean _componentMap( any, any )
@@ -84,14 +84,12 @@ destructor ECSComponents()
   delete( _hashTable )
 end destructor
 
-operator ECSComponents.[]( id as ComponentID ) as any ptr
+operator ECSComponents.[]( id as ECSComponent ) as any ptr
   return( cast( ubyte ptr, strptr( _components( id ).value ) ) )
 end operator
 
 operator ECSComponents.[]( n as string ) as any ptr
-  dim as ComponentID id = getID( n )
-  
-  return( cast( ubyte ptr, strptr( _components( id ).value ) ) )
+  return( cast( ubyte ptr, strptr( _components( getID( n ) ).value ) ) )
 end operator
 
 function ECSComponents.getDebugInfo() as string
@@ -114,17 +112,17 @@ function ECSComponents.getDebugInfo() as string
   return( s )
 end function
 
-function ECSComponents.getID( n as string ) as ComponentID
+function ECSComponents.getID( n as string ) as ECSComponent
   dim as ECSComponentTableEntry ptr entry = _hashTable->find( lcase( n ) )
   
   return( iif( entry, entry->id, COMPONENT_NOT_FOUND ) )
 end function
 
-function ECSComponents.getName( c as ComponentID ) as string
+function ECSComponents.getName( c as ECSComponent ) as string
   return( _components( c ).name )
 end function
 
-function ECSComponents.registerComponent( n as string, s as uinteger ) as ComponentID
+function ECSComponents.registerComponent( n as string, s as uinteger ) as ECSComponent
   if( _count < ECS_MAX_COMPONENTS ) then
     dim as long id = _count
     
@@ -181,35 +179,35 @@ end function
   as usual, but not checked nor indexed as regular components.
   Components declared in this way allocate no memory.
 '/
-function ECSComponents.registerComponent( n as string ) as ComponentID
+function ECSComponents.registerComponent( n as string ) as ECSComponent
   return( registerComponent( n, 0 ) )
 end function
 
-function ECSComponents.getComponent( e as Entity, c as ComponentID ) as any ptr
+function ECSComponents.getComponent( e as ECSEntity, c as ECSComponent ) as any ptr
   return( cast( ubyte ptr, strptr( _components( c ).value ) ) + e * _components( c ).size )
 end function
 
-function ECSComponents.getComponent( e as Entity, c as string ) as any ptr
+function ECSComponents.getComponent( e as ECSEntity, c as string ) as any ptr
   return( getComponent( e, getID( c ) ) )
 end function
 
-function ECSComponents.addComponent( e as Entity, c as ComponentID ) as any ptr
+function ECSComponents.addComponent( e as ECSEntity, c as ECSComponent ) as any ptr
   if( _componentMap( e, c ) = false ) then
     _componentMap( e, c ) = true
     _componentTable( e, _componentCount( e ) ) = c
     _componentCount( e ) += 1
     
-    ECS.raiseEvent( EV_COMPONENTADDED, ComponentChangedEventArgs( e, c ), @this )
+    ECS.raiseEvent( EV_COMPONENTADDED, ECSComponentChangedEventArgs( e, c ), @this )
   end if
   
   return( cast( ubyte ptr, strptr( _components( c ).value ) ) + e * _components( c ).size )
 end function
 
-function ECSComponents.addComponent( e as Entity, c as string ) as any ptr
+function ECSComponents.addComponent( e as ECSEntity, c as string ) as any ptr
   return( addComponent( e, getID( c ) ) )
 end function
 
-function ECSComponents.removeComponent( e as Entity, c as ComponentID ) as boolean
+function ECSComponents.removeComponent( e as ECSEntity, c as ECSComponent ) as boolean
   if( _componentMap( e, c ) = true ) then
     _componentMap( e, c ) = false
     
@@ -221,7 +219,7 @@ function ECSComponents.removeComponent( e as Entity, c as ComponentID ) as boole
       end if
     next
     
-    ECS.raiseEvent( EV_COMPONENTREMOVED, ComponentChangedEventArgs( e, c ), @this )
+    ECS.raiseEvent( EV_COMPONENTREMOVED, ECSComponentChangedEventArgs( e, c ), @this )
     
     return( true )
   end if
@@ -229,20 +227,20 @@ function ECSComponents.removeComponent( e as Entity, c as ComponentID ) as boole
   return( false )
 end function
 
-function ECSComponents.removeComponent( e as Entity, c as string ) as boolean
+function ECSComponents.removeComponent( e as ECSEntity, c as string ) as boolean
   return( removeComponent( e, cast( ECSComponentTableEntry ptr, _hashTable->find( lcase( c ) ) )->id ) )
 end function
 
-function ECSComponents.hasComponent( e as Entity, c as ComponentID ) as boolean
+function ECSComponents.hasComponent( e as ECSEntity, c as ECSComponent ) as boolean
   return( _componentMap( e, c ) )
 end function
 
-function ECSComponents.hasComponent( e as Entity, c as string ) as boolean
+function ECSComponents.hasComponent( e as ECSEntity, c as string ) as boolean
   return( hasComponent( e, getID( c ) ) )
 end function
 
 sub ECSComponents.event_entityDestroyed( _
-  sender as any ptr, e as EntityChangedEventArgs, receiver as ECSComponents ptr )
+  sender as any ptr, e as ECSEntityChangedEventArgs, receiver as ECSComponents ptr )
   
   if( sender = receiver->_entities ) then
     for i as integer = 0 to receiver->_componentCount( e.eID )

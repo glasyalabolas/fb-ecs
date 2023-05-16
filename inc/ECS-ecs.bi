@@ -3,27 +3,27 @@
 
 type ECS extends Object
   public:
-    declare static sub registerListener( as Event, as ECSEventHandler, as any ptr = 0 )
-    declare static sub unregisterListener( as Event, as ECSEventHandler, as any ptr = 0 )
-    declare static sub raiseEvent( as Event, as EventArgs, as any ptr = 0 )
+    declare static sub registerListener( as ECSEvent, as ECSEventHandler, as any ptr = 0 )
+    declare static sub unregisterListener( as ECSEvent, as ECSEventHandler, as any ptr = 0 )
+    declare static sub raiseEvent( as ECSEvent, as ECSEventArgs, as any ptr = 0 )
   
   private:
     declare constructor()
     
-    static as Events _events
+    static as ECSEvents _events
 end type
 
-static as Events ECS._events = Events()
+static as ECSEvents ECS._events = ECSEvents()
 
-sub ECS.registerListener( e as Event, l as ECSEventHandler, r as any ptr = 0 )
+sub ECS.registerListener( e as ECSEvent, l as ECSEventHandler, r as any ptr = 0 )
   _events.registerListener( e, l, r )
 end sub
 
-sub ECS.unregisterListener( e as Event, l as ECSEventHandler, r as any ptr = 0 )
+sub ECS.unregisterListener( e as ECSEvent, l as ECSEventHandler, r as any ptr = 0 )
   _events.unregisterListener( e, l, r )
 end sub
 
-sub ECS.raiseEvent( ev as Event, e as EventArgs, sender as any ptr = 0 )
+sub ECS.raiseEvent( ev as ECSEvent, e as ECSEventArgs, sender as any ptr = 0 )
   _events.raise( ev, e, sender )
 end sub
 

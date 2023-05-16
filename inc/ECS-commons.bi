@@ -5,9 +5,9 @@ const as long ECS_MAX_ENTITIES = 5000
 const as long ECS_MAX_COMPONENTS = 200
 const as long ECS_MAX_COMPONENTS_PER_ENTITY = 32
 
-type as short Entity
-type as short ComponentID
-type as string DATA_BUFFER
+type as short ECSEntity
+type as short ECSComponent
+type as string ECS_DATA_BUFFER
 
 function hash_32( x as ulong ) as ulong
   x = ( ( x shr 16 ) xor x ) * &h45d9f3b

@@ -40,7 +40,7 @@ type Lifetime
 end type
 
 type Ship
-  as Entity shipID
+  as ECSEntity shipID
 end type
 
 type Controls
@@ -59,5 +59,5 @@ type Collision
 end type
 
 type Owner
-  as Entity id
+  as ECSEntity id
 end type

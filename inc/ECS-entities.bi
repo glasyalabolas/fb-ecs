@@ -16,11 +16,11 @@ type ECSEntities extends Object
     declare constructor()
     declare destructor()
     
-    declare function create() as Entity
-    declare function create( as string ) as Entity
-    declare function find( as string ) as Entity
-    declare function getName( as Entity ) as string
-    declare function destroy( as Entity ) as Entity
+    declare function create() as ECSEntity
+    declare function create( as string ) as ECSEntity
+    declare function find( as string ) as ECSEntity
+    declare function getName( as ECSEntity ) as string
+    declare function destroy( as ECSEntity ) as ECSEntity
     
     declare function getInfo() as string
     
@@ -58,7 +58,7 @@ function ECSEntities.getInfo() as string
   return( s )
 end function
 
-function ECSEntities.create() as Entity
+function ECSEntities.create() as ECSEntity
   dim as long current = _last
   dim as long count
   
@@ -72,7 +72,7 @@ function ECSEntities.create() as Entity
     _active( current ) = true
     _entities( current ).id = current
     
-    ECS.raiseEvent( EV_ENTITYCREATED, EntityChangedEventArgs( current ), @this )
+    ECS.raiseEvent( EV_ENTITYCREATED, ECSEntityChangedEventArgs( current ), @this )
     
     return( current )
   else
@@ -80,8 +80,8 @@ function ECSEntities.create() as Entity
   end if
 end function
 
-function ECSEntities.create( n as string ) as Entity
-  dim as Entity e = create()
+function ECSEntities.create( n as string ) as ECSEntity
+  dim as ECSEntity e = create()
 
   _entities( e ).name = n
   _entityMap->add( n, @_entities( e ) )
@@ -89,17 +89,17 @@ function ECSEntities.create( n as string ) as Entity
   return( e )
 end function
 
-function ECSEntities.find( n as string ) as Entity
+function ECSEntities.find( n as string ) as ECSEntity
   var entry = cast( ECSEntityTableEntry ptr, _entityMap->find( n ) )
   
   return( iif( entry, entry->id, ENTITY_NOT_FOUND ) )
 end function
 
-function ECSEntities.getName( e as Entity ) as string
+function ECSEntities.getName( e as ECSEntity ) as string
   return( _entities( e ).name )
 end function
 
-function ECSEntities.destroy( e as Entity ) as Entity
+function ECSEntities.destroy( e as ECSEntity ) as ECSEntity
   if( _active( e ) ) then
     _active( e ) = false
     _last = e
@@ -108,7 +108,7 @@ function ECSEntities.destroy( e as Entity ) as Entity
       _entityMap->remove( _entities( e ).name )
     end if
     
-    ECS.raiseEvent( EV_ENTITYDESTROYED, EntityChangedEventArgs( e ), @this )
+    ECS.raiseEvent( EV_ENTITYDESTROYED, ECSEntityChangedEventArgs( e ), @this )
     
     return( e )
   end if
