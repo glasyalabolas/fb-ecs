@@ -34,7 +34,7 @@ function createShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) 
   
   asComponent( Collision, c.addComponent( pship, "collision" ) ) _
     .radius = 5.0f
-  asComponent( Owner, c.addComponent( pship, "owner" ) ) _
+  asComponent( Parent, c.addComponent( pship, "parent" ) ) _
     .id = owner
   
   c.addComponent( pship, "type:ship" )
@@ -53,11 +53,17 @@ function createPlayer( e as ECSEntities, c as ECSComponents ) as ECSEntity
   return( player )
 end function
 
+#macro ADD_COMPONENT( _mc_, _c_, _e_ )
+  ( *cast( _c_ ptr, _mc_.addComponent( _e_, #_c_ ) ) )
+#endmacro
+
 function createAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2, s as single ) as ECSEntity
   var asteroid = e.create()
   
-  asComponent( Position, c.addComponent( asteroid, "position" ) ) _
+  ADD_COMPONENT( c, Position, asteroid ) _
     .pos = p
+  'asComponent( Position, c.addComponent( asteroid, "position" ) ) _
+  '  .pos = p
   
   withComponent( Physics, c.addComponent( asteroid, "physics" ) )
     .vel = v
@@ -72,7 +78,8 @@ function createAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as V
     .value = 5.0f * s
   asComponent( Collision, c.addComponent( asteroid, "collision" ) ) _
     .radius = s
-  
+  asComponent( ScoreValue, c.addComponent( asteroid, "scorevalue" ) ) _
+    .value = 500 / s
   c.addComponent( asteroid, "type:asteroid" )
   
   return( asteroid )
@@ -106,7 +113,7 @@ function createBullet( _
     .size = 4.0f
   asComponent( Lifetime, c.addComponent( bullet, "lifetime" ) ) _
     .value = lt
-  asComponent( Owner, c.addComponent( bullet, "owner" ) ) _
+  asComponent( Parent, c.addComponent( bullet, "parent" ) ) _
     .id = owner
   
   c.addComponent( bullet, "type:bullet" )

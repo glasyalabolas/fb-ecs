@@ -288,7 +288,7 @@ type ShootableSystem extends ECSSystem
     as Dimensions ptr d
     as Lifetime ptr lt
     as Health ptr h
-    as Owner ptr ow
+    as Parent ptr prnt
 end type
 
 constructor ShootableSystem( e as ECSEntities, c as ECSComponents )
@@ -302,27 +302,26 @@ constructor ShootableSystem( e as ECSEntities, c as ECSComponents )
   p = requires( "position" )
   d = requires( "dimensions" )
   
-  ow = myComponents[ "owner" ]
+  prnt = myComponents[ "parent" ]
 end constructor
 
 destructor ShootableSystem() : end destructor
 
+#macro filter?( _v_, _p_, _f_, _r_ )
+var _r_ = UnorderedList( _p_.count )
+
+for each _v_ in _p_
+  if( _f_ ) then
+    _r_.add( e )
+  end if
+next
+#endmacro
+
+#define like ,
+
 sub ShootableSystem.process( dt as double = 0.0d )
-  var bullets = UnorderedList( processed.count )
-  
-  for each e as ECSEntity in processed
-    if( contains( e, "type:bullet" ) ) then
-      bullets.add( e )
-    end if
-  next
-  
-  var asteroids = UnorderedList( processed.count )
-  
-  for each e as ECSEntity in processed
-    if( contains( e, "type:asteroid" ) ) then
-      asteroids.add( e )
-    end if
-  next
+  filter e as ECSEntity in processed like contains( e, "type:bullet" ) in bullets
+  filter e as ECSEntity in processed like not contains( e, "type:bullet" ) in asteroids
   
   var abb = BoundingCircle(), bbb = BoundingCircle()
   
@@ -344,7 +343,7 @@ sub ShootableSystem.process( dt as double = 0.0d )
         '' Did we destroy the asteroid?
         if( h[ a ].value < 0.0f ) then
           ECS.raiseEvent( EV_GAME_ENTITYDESTROYED, _
-            GameEntityDestroyedEventArgs( a, ow[ b ].id, myEntities, myComponents ), @this )
+            GameEntityDestroyedEventArgs( a, prnt[ b ].id, myEntities, myComponents ), @this )
         end if
       end if 
     next
@@ -424,7 +423,7 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
     end if
     
     Debug.print( "I was killed by: " & e.e->getName( e.author ) )
-    Debug.print( "Its owner is: " & e.e->getName( cast( Owner ptr, ( *e.c )[ "owner" ] )[ e.author ].id ) )
+    Debug.print( "Its parent is: " & e.e->getName( cast( Parent ptr, ( *e.c )[ "parent" ] )[ e.author ].id ) )
   end if
 end sub
 
@@ -449,10 +448,17 @@ destructor ScoreSystem()
   ECS.unregisterListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
 end destructor
 
+#macro component( _mc_, _e_, _c_ )
+  ( cast( _c_ ptr, ( _mc_ )[ #_c_ ] )[ _e_ ] )
+#endmacro
+
 sub ScoreSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as ScoreSystem ptr )
   
-  '' TODO
+  if( e.e->getName( e.author ) = "playership" ) then
+    component( *e.c, component( *e.c, e.author, Parent ).id, Score ) _
+      .value += component( *e.c, e.destroyed, ScoreValue ).value
+  end if
 end sub
 
 type ShipRenderSystem extends ECSSystem

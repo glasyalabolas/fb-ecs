@@ -58,6 +58,6 @@ type Collision
   as single radius
 end type
 
-type Owner
+type Parent
   as ECSEntity id
 end type
