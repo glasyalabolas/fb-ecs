@@ -6,12 +6,12 @@
 const as long INVALID_ENTITY = -1
 const as long ENTITY_NOT_FOUND = -2
 
-type EntityTableEntry
+type ECSEntityTableEntry
   as string name
   as long id
 end type
 
-type Entities extends Object
+type ECSEntities extends Object
   public:
     declare constructor()
     declare destructor()
@@ -27,13 +27,13 @@ type Entities extends Object
     declare sub reset()
   
   private:
-    as EntityTableEntry _entities( any )
+    as ECSEntityTableEntry _entities( any )
     as boolean _active( any )
     as FB.HashTable ptr _entityMap
     as long _deletedCount, _last
 end type
 
-constructor Entities()
+constructor ECSEntities()
   redim _entities( 0 to ECS_MAX_ENTITIES - 1 )
   redim _active( 0 to ECS_MAX_ENTITIES - 1 )
   
@@ -41,14 +41,14 @@ constructor Entities()
   _last = 0
 end constructor
 
-destructor Entities()
+destructor ECSEntities()
   erase( _entities )
   erase( _active )
   
   delete( _entityMap )
 end destructor
 
-function Entities.getInfo() as string
+function ECSEntities.getInfo() as string
   dim as string s
   
   for i as integer = 0 to ECS_MAX_ENTITIES - 1
@@ -58,7 +58,7 @@ function Entities.getInfo() as string
   return( s )
 end function
 
-function Entities.create() as Entity
+function ECSEntities.create() as Entity
   dim as long current = _last
   dim as long count
   
@@ -80,7 +80,7 @@ function Entities.create() as Entity
   end if
 end function
 
-function Entities.create( n as string ) as Entity
+function ECSEntities.create( n as string ) as Entity
   dim as Entity e = create()
 
   _entities( e ).name = n
@@ -89,17 +89,17 @@ function Entities.create( n as string ) as Entity
   return( e )
 end function
 
-function Entities.find( n as string ) as Entity
-  var entry = cast( EntityTableEntry ptr, _entityMap->find( n ) )
+function ECSEntities.find( n as string ) as Entity
+  var entry = cast( ECSEntityTableEntry ptr, _entityMap->find( n ) )
   
   return( iif( entry, entry->id, ENTITY_NOT_FOUND ) )
 end function
 
-function Entities.getName( e as Entity ) as string
+function ECSEntities.getName( e as Entity ) as string
   return( _entities( e ).name )
 end function
 
-function Entities.destroy( e as Entity ) as Entity
+function ECSEntities.destroy( e as Entity ) as Entity
   if( _active( e ) ) then
     _active( e ) = false
     _last = e
@@ -116,7 +116,7 @@ function Entities.destroy( e as Entity ) as Entity
   return( INVALID_ENTITY )
 end function
 
-sub Entities.reset()
+sub ECSEntities.reset()
   '' TODO
 end sub
 

@@ -11,52 +11,64 @@ using FbGame
 Debug.toConsole()
 
 Debug.print( "Creating entities and components..." )
-  var myEntities = Entities(), myComponents = Components( myEntities )
+  var myEntities = ECSEntities(), myComponents = ECSComponents( myEntities )
 Debug.print( "Done." )
 
 Debug.print( "Registering components..." )
-  registerComponent( myComponents, "position", Position )
-  registerComponent( myComponents, "orientation", Orientation )
-  registerComponent( myComponents, "physics", Physics )
-  registerComponent( myComponents, "appearance", Appearance )
-  registerComponent( myComponents, "dimensions", Dimensions )
-  registerComponent( myComponents, "controls", Controls )
-  registerComponent( myComponents, "health", Health )
-  registerComponent( myComponents, "score", Score )
-  registerComponent( myComponents, "speed", Speed )
-  registerComponent( myComponents, "lifetime", Lifetime )
-  registerComponent( myComponents, "ship", Ship )
-  registerComponent( myComponents, "controlparameters", ControlParameters )
-  registerComponent( myComponents, "collision", Collision )
-  registerComponent( myComponents, "owner", Owner )
+  register Position in myComponents
+  register Orientation in myComponents
+  register Physics in myComponents
+  register Appearance in myComponents
+  register Dimensions in myComponents
+  register Controls in myComponents
+  register Health in myComponents
+  register Score in myComponents
+  register ScoreValue in myComponents
+  register Speed in myComponents
+  register Lifetime in myComponents
+  register Ship in myComponents
+  register ControlParameters in myComponents
+  register Collision in myComponents
+  register Owner in myComponents
   
-  myComponents.register( "type:ship" )
-  myComponents.register( "type:asteroid" )
-  myComponents.register( "type:bullet" )
+  trait "type:ship" in myComponents
+  trait "type:asteroid" in myComponents
+  trait "type:bullet" in myComponents
 Debug.print( "Done" )
+
+Debug.print( myComponents.getDebugInfo() )
 
 /'
   Main code
 '/
 Game.init( 800, 600 )
 
-'' Instantiate systems before creating entities
-var s_lifetime = LifetimeSystem( myEntities, myComponents )
-var s_renderShip = ShipRenderSystem( myEntities, myComponents )
-var s_renderAsteroids = AsteroidRenderSystem( myEntities, myComponents )
-var s_renderBullets = BulletRenderSystem( myEntities, myComponents )
-var s_move = MovableSystem( myEntities, myComponents )
-var s_control = ControllableSystem( myEntities, myComponents )
-var s_collision = CollidableSystem( myEntities, myComponents )
-var s_shoot = ShootableSystem( myEntities, myComponents )
-var s_health = HealthSystem( myEntities, myComponents )
-var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
-var s_score = ScoreSystem( myEntities, myComponents )
+#macro _DEBUG?( _n_ )
+  Debug.print( #_n_ )
+  _n_
+#endmacro
 
+'' Instantiate systems before creating entities
+Debug.print( "Instantiating systems..." )
+_DEBUG var s_lifetime = LifetimeSystem( myEntities, myComponents )
+_DEBUG var s_renderShip = ShipRenderSystem( myEntities, myComponents )
+_DEBUG var s_renderAsteroids = AsteroidRenderSystem( myEntities, myComponents )
+_DEBUG var s_renderBullets = BulletRenderSystem( myEntities, myComponents )
+_DEBUG var s_move = MovableSystem( myEntities, myComponents )
+_DEBUG var s_control = ControllableSystem( myEntities, myComponents )
+_DEBUG var s_collision = CollidableSystem( myEntities, myComponents )
+_DEBUG var s_shoot = ShootableSystem( myEntities, myComponents )
+_DEBUG var s_health = HealthSystem( myEntities, myComponents )
+_DEBUG var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
+_DEBUG var s_score = ScoreSystem( myEntities, myComponents )
+Debug.print( "Done." )
+
+Debug.print( "Creating entities..." )
 '' Create entities
-createPlayer( myEntities, myComponents )
-createShip( myEntities, myComponents, myEntities.find( "player" ) )
-createAsteroids( myEntities, myComponents, 30 )
+_DEBUG var player = createPlayer( myEntities, myComponents )
+_DEBUG createShip( myEntities, myComponents, myEntities.find( "player" ) )
+_DEBUG createAsteroids( myEntities, myComponents, 30 )
+Debug.print( "Done." )
 
 dim as double dt, updateTime, updateTotal, renderTime, renderTotal, frameTime
 dim as ulongint count
@@ -105,6 +117,7 @@ do
       s_shoot.process()
       
       ? "FPS: " & int( 1 / ( frameTime  / count ) )
+      ? "Score: " & ( *cast( Score ptr, myComponents.getComponent( player, "score" ) ) ).value
       ? "Update: " & int( 1 / ( updateTotal / count ) ) & " (" & int( ( updateTotal / frameTime ) * 100 ) & "%)"
       ? "Render: " & int( 1 / ( renderTotal / count ) ) & " (" & int( ( renderTotal / frameTime ) * 100 ) & "%)" 
     flip()

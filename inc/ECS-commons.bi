@@ -76,4 +76,12 @@ end function
   dim _e_ = _p_[ i ]
 #endmacro
 
+#macro register?( _c_, _cmp_ )
+  _cmp_.registerComponent( #_c_, sizeof( _c_ ) )
+#endmacro
+
+#macro trait?( _c_, _cmp_ )
+  _cmp_.registerComponent( _c_ )
+#endmacro
+
 #endif

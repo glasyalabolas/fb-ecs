@@ -15,10 +15,10 @@ type System extends Object
     
   protected:
     declare constructor()
-    declare constructor( as Entities, as Components )
+    declare constructor( as ECSEntities, as ECSComponents )
     
-    declare property myEntities() byref as Entities
-    declare property myComponents() byref as Components
+    declare property myEntities() byref as ECSEntities
+    declare property myComponents() byref as ECSComponents
     
     declare function requires( as string ) as any ptr
     declare function has( as string ) as any ptr
@@ -41,15 +41,15 @@ type System extends Object
     as boolean _isProcessed( any )
     
     as UnorderedList _processed
-    as Entities ptr _entities
-    as Components ptr _components
+    as ECSEntities ptr _entities
+    as ECSComponents ptr _components
     as long _requiredCount
     as long _hasCount
 end type
 
 constructor System() : end constructor
 
-constructor System( e as Entities, c as Components )
+constructor System( e as ECSEntities, c as ECSComponents )
   ECS.registerListener( EV_ENTITYDESTROYED, toHandler( System.event_entityDestroyed ), @this )
   ECS.registerListener( EV_COMPONENTADDED, toHandler( System.event_componentAdded ), @this )
   ECS.registerListener( EV_COMPONENTREMOVED, toHandler( System.event_componentRemoved ), @this )
@@ -89,11 +89,11 @@ property System.processed() byref as UnorderedList
   return( _processed )
 end property
 
-property System.myEntities() byref as Entities
+property System.myEntities() byref as ECSEntities
   return( *_entities )
 end property
 
-property System.myComponents() byref as Components
+property System.myComponents() byref as ECSComponents
   return( *_components )
 end property
 

@@ -6,7 +6,7 @@
 const as long INVALID_COMPONENT = -1
 const as long COMPONENT_NOT_FOUND = -2
 
-type ComponentTableEntry
+type ECSComponentTableEntry
   as ComponentID id
   as uinteger size
   as DATA_BUFFER value
@@ -22,16 +22,16 @@ end type
   hash table bucket), and the entity ID is then used to find the corresponding
   index into the component buffer.
 '/
-type Components extends Object
+type ECSComponents extends Object
   public:
-    declare constructor( as Entities )
+    declare constructor( as ECSEntities )
     declare destructor()
     
     declare operator []( as ComponentID ) as any ptr
     declare operator []( as string ) as any ptr
     
-    declare function register( as string, as uinteger ) as ComponentID
-    declare function register( as string ) as ComponentID
+    declare function registerComponent( as string, as uinteger ) as ComponentID
+    declare function registerComponent( as string ) as ComponentID
     declare function getID( as string ) as ComponentID
     declare function getName( as ComponentID ) as string
     declare function getComponent( as Entity, as ComponentID ) as any ptr
@@ -46,21 +46,21 @@ type Components extends Object
     declare function getDebugInfo() as string
     
   private:
-    declare static sub components_entityDestroyed( _
-      as any ptr, as EntityChangedEventArgs, as Components ptr )
+    declare static sub event_entityDestroyed( _
+      as any ptr, as EntityChangedEventArgs, as ECSComponents ptr )
     
-    as ComponentTableEntry _components( any )
+    as ECSComponentTableEntry _components( any )
     as boolean _componentMap( any, any )
     as long _componentTable( any, any )
     as long _componentCount( any )
     
     as Fb.HashTable ptr _hashTable
     
-    as Entities ptr _entities
+    as ECSEntities ptr _entities
     as long _count
 end type
 
-constructor Components( e as Entities )
+constructor ECSComponents( e as ECSEntities )
   redim _components( 0 to ECS_MAX_COMPONENTS - 1 )
   redim _componentMap( 0 to ECS_MAX_ENTITIES - 1, 0 to ECS_MAX_COMPONENTS - 1 )
   redim _componentTable( 0 to ECS_MAX_ENTITIES - 1, 0 to ECS_MAX_COMPONENTS - 1 )
@@ -68,13 +68,13 @@ constructor Components( e as Entities )
   
   _entities = @e
   
-  ECS.registerListener( EV_ENTITYDESTROYED, toHandler( Components.components_entityDestroyed ), @this )
+  ECS.registerListener( EV_ENTITYDESTROYED, toHandler( ECSComponents.event_entityDestroyed ), @this )
   
   _hashTable = new Fb.HashTable()
 end constructor
 
-destructor Components()
-  ECS.unregisterListener( EV_ENTITYDESTROYED, toHandler( Components.components_entityDestroyed ), @this )
+destructor ECSComponents()
+  ECS.unregisterListener( EV_ENTITYDESTROYED, toHandler( ECSComponents.event_entityDestroyed ), @this )
   
   erase( _components )
   erase( _componentMap )
@@ -84,17 +84,17 @@ destructor Components()
   delete( _hashTable )
 end destructor
 
-operator Components.[]( id as ComponentID ) as any ptr
+operator ECSComponents.[]( id as ComponentID ) as any ptr
   return( cast( ubyte ptr, strptr( _components( id ).value ) ) )
 end operator
 
-operator Components.[]( n as string ) as any ptr
+operator ECSComponents.[]( n as string ) as any ptr
   dim as ComponentID id = getID( n )
   
   return( cast( ubyte ptr, strptr( _components( id ).value ) ) )
 end operator
 
-function Components.getDebugInfo() as string
+function ECSComponents.getDebugInfo() as string
   dim as string s
   
   dim as uinteger sum
@@ -114,32 +114,32 @@ function Components.getDebugInfo() as string
   return( s )
 end function
 
-function Components.getID( n as string ) as ComponentID
-  dim as ComponentTableEntry ptr entry = _hashTable->find( n )
+function ECSComponents.getID( n as string ) as ComponentID
+  dim as ECSComponentTableEntry ptr entry = _hashTable->find( lcase( n ) )
   
   return( iif( entry, entry->id, COMPONENT_NOT_FOUND ) )
 end function
 
-function Components.getName( c as ComponentID ) as string
+function ECSComponents.getName( c as ComponentID ) as string
   return( _components( c ).name )
 end function
 
-function Components.register( n as string, s as uinteger ) as ComponentID
+function ECSComponents.registerComponent( n as string, s as uinteger ) as ComponentID
   if( _count < ECS_MAX_COMPONENTS ) then
-      dim as long id = _count
+    dim as long id = _count
+    
+    with _components( _count )
+      .id = id
+      .name = lcase( n )
+      .value = string( s * ECS_MAX_ENTITIES, chr( 0 ) )
+      .size = s
       
-      with _components( _count )
-        .id = id
-        .name = n
-        .value = string( s * ECS_MAX_ENTITIES, chr( 0 ) )
-        .size = s
-        
-        _hashTable->add( .name, @_components( id ) )
-      end with
-      
-      _count += 1
-      
-      return( id )
+      _hashTable->add( .name, @_components( id ) )
+    end with
+    
+    _count += 1
+    
+    return( id )
   end if
   
   return( INVALID_COMPONENT )
@@ -181,19 +181,19 @@ end function
   as usual, but not checked nor indexed as regular components.
   Components declared in this way allocate no memory.
 '/
-function Components.register( n as string ) as ComponentID
-  return( register( n, 0 ) )
+function ECSComponents.registerComponent( n as string ) as ComponentID
+  return( registerComponent( n, 0 ) )
 end function
 
-function Components.getComponent( e as Entity, c as ComponentID ) as any ptr
+function ECSComponents.getComponent( e as Entity, c as ComponentID ) as any ptr
   return( cast( ubyte ptr, strptr( _components( c ).value ) ) + e * _components( c ).size )
 end function
 
-function Components.getComponent( e as Entity, c as string ) as any ptr
+function ECSComponents.getComponent( e as Entity, c as string ) as any ptr
   return( getComponent( e, getID( c ) ) )
 end function
 
-function Components.addComponent( e as Entity, c as ComponentID ) as any ptr
+function ECSComponents.addComponent( e as Entity, c as ComponentID ) as any ptr
   if( _componentMap( e, c ) = false ) then
     _componentMap( e, c ) = true
     _componentTable( e, _componentCount( e ) ) = c
@@ -205,11 +205,11 @@ function Components.addComponent( e as Entity, c as ComponentID ) as any ptr
   return( cast( ubyte ptr, strptr( _components( c ).value ) ) + e * _components( c ).size )
 end function
 
-function Components.addComponent( e as Entity, c as string ) as any ptr
+function ECSComponents.addComponent( e as Entity, c as string ) as any ptr
   return( addComponent( e, getID( c ) ) )
 end function
 
-function Components.removeComponent( e as Entity, c as ComponentID ) as boolean
+function ECSComponents.removeComponent( e as Entity, c as ComponentID ) as boolean
   if( _componentMap( e, c ) = true ) then
     _componentMap( e, c ) = false
     
@@ -229,20 +229,20 @@ function Components.removeComponent( e as Entity, c as ComponentID ) as boolean
   return( false )
 end function
 
-function Components.removeComponent( e as Entity, c as string ) as boolean
-  return( removeComponent( e, cast( ComponentTableEntry ptr, _hashTable->find( c ) )->id ) )
+function ECSComponents.removeComponent( e as Entity, c as string ) as boolean
+  return( removeComponent( e, cast( ECSComponentTableEntry ptr, _hashTable->find( lcase( c ) ) )->id ) )
 end function
 
-function Components.hasComponent( e as Entity, c as ComponentID ) as boolean
+function ECSComponents.hasComponent( e as Entity, c as ComponentID ) as boolean
   return( _componentMap( e, c ) )
 end function
 
-function Components.hasComponent( e as Entity, c as string ) as boolean
+function ECSComponents.hasComponent( e as Entity, c as string ) as boolean
   return( hasComponent( e, getID( c ) ) )
 end function
 
-sub Components.components_entityDestroyed( _
-  sender as any ptr, e as EntityChangedEventArgs, receiver as Components ptr )
+sub ECSComponents.event_entityDestroyed( _
+  sender as any ptr, e as EntityChangedEventArgs, receiver as ECSComponents ptr )
   
   if( sender = receiver->_entities ) then
     for i as integer = 0 to receiver->_componentCount( e.eID )
@@ -254,8 +254,8 @@ sub Components.components_entityDestroyed( _
 end sub
 
 '' Convenience macro to register components
-#macro registerComponent( _cmp_, _n_, _c_ )
-  _cmp_.register( _n_, sizeof( _c_ ) )
-#endmacro
+'#macro registerComponent( _cmp_, _n_, _c_ )
+'  _cmp_.register( _n_, sizeof( _c_ ) )
+'#endmacro
 
 #endif

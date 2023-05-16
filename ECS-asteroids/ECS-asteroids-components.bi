@@ -27,6 +27,10 @@ type Score
   as ulong value
 end type
 
+type ScoreValue
+  as long value
+end type
+
 type Speed
   as single value
 end type

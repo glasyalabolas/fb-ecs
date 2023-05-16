@@ -1,4 +1,4 @@
-function createShip( e as Entities, c as Components, owner as Entity ) as Entity
+function createShip( e as ECSEntities, c as ECSComponents, owner as Entity ) as Entity
   var pship = e.create( "playership" )
   
   asComponent( Position, c.addComponent( pship, "position" ) ) _
@@ -42,7 +42,7 @@ function createShip( e as Entities, c as Components, owner as Entity ) as Entity
   return( pship )
 end function
 
-function createPlayer( e as Entities, c as Components ) as Entity
+function createPlayer( e as ECSEntities, c as ECSComponents ) as Entity
   var player = e.create( "player" )
   
   asComponent( Health, c.addComponent( player, "health" ) ) _
@@ -53,7 +53,7 @@ function createPlayer( e as Entities, c as Components ) as Entity
   return( player )
 end function
 
-function createAsteroid( e as Entities, c as Components, p as Vec2, v as Vec2, s as single ) as Entity
+function createAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2, s as single ) as Entity
   var asteroid = e.create()
   
   asComponent( Position, c.addComponent( asteroid, "position" ) ) _
@@ -78,7 +78,7 @@ function createAsteroid( e as Entities, c as Components, p as Vec2, v as Vec2, s
   return( asteroid )
 end function
 
-sub createAsteroids( e as Entities, c as Components, count as long )
+sub createAsteroids( e as ECSEntities, c as ECSComponents, count as long )
   for i as integer = 1 to count
     dim as single size = rng( 8.0f, 40.0f )
     
@@ -90,7 +90,7 @@ sub createAsteroids( e as Entities, c as Components, count as long )
 end sub
 
 function createBullet( _
-  e as Entities, c as Components, p as Vec2, vel as Vec2, spd as single, lt as single, owner as Entity ) as Entity
+  e as ECSEntities, c as ECSComponents, p as Vec2, vel as Vec2, spd as single, lt as single, owner as Entity ) as Entity
   
   var bullet = e.create()
   

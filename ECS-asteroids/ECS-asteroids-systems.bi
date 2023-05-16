@@ -3,14 +3,14 @@ enum GAME_EVENTS
 end enum
 
 type GameEntityDestroyedEventArgs extends EventArgs
-  declare constructor( as Entity, as Entity, as Entities, as Components )
+  declare constructor( as Entity, as Entity, as ECSEntities, as ECSComponents )
   
   as Entity destroyed, author
-  as Entities ptr e
-  as Components ptr c
+  as ECSEntities ptr e
+  as ECSComponents ptr c
 end type
 
-constructor GameEntityDestroyedEventArgs( d as Entity, a as Entity, ent as Entities, com as Components )
+constructor GameEntityDestroyedEventArgs( d as Entity, a as Entity, ent as ECSEntities, com as ECSComponents )
   destroyed = d : author = a : e = @ent : c = @com
 end constructor
 
@@ -23,7 +23,7 @@ sub move( m as Position, p as Physics, dt as double )
 end sub
 
 type MovableSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d ) override
@@ -33,7 +33,7 @@ type MovableSystem extends System
     as Physics ptr ph
 end type
 
-constructor MovableSystem( e as Entities, c as Components )
+constructor MovableSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   p = requires( "position" )
@@ -61,7 +61,7 @@ sub rotate( o as Orientation, a as single )
   o.dir = o.dir.rotated( rad( a ) ).normalize()
 end sub
 
-sub shoot( e as Entities, c as Components, _
+sub shoot( e as ECSEntities, c as ECSComponents, _
   m as Position, o as Orientation, ph as Physics, owner as Entity, dt as double )
   
   '' Choose a random direction arc
@@ -76,7 +76,7 @@ sub shoot( e as Entities, c as Components, _
 end sub
 
 type ControllableSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d ) override
@@ -89,7 +89,7 @@ type ControllableSystem extends System
     as Physics ptr ph
 end type
 
-constructor ControllableSystem( e as Entities, c as Components )
+constructor ControllableSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   ctrl = requires( "controls" )
@@ -146,7 +146,7 @@ sub ControllableSystem.process( dt as double = 0.0d )
 end sub
 
 type LifetimeSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d )
@@ -155,7 +155,7 @@ type LifetimeSystem extends System
     as Lifetime ptr lt
 end type
 
-constructor LifetimeSystem( e as Entities, c as Components )
+constructor LifetimeSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   lt = requires( "lifetime" )
@@ -180,7 +180,7 @@ sub LifetimeSystem.process( dt as double = 0.0d )
 end sub
 
 type CollidableSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d ) override
@@ -192,7 +192,7 @@ type CollidableSystem extends System
     as Collision ptr coll
 end type
 
-constructor CollidableSystem( e as Entities, c as Components )
+constructor CollidableSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   p = requires( "position" )
@@ -277,7 +277,7 @@ sub CollidableSystem.process( dt as double = 0.0d )
 end sub
 
 type ShootableSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d ) override
@@ -291,7 +291,7 @@ type ShootableSystem extends System
     as Owner ptr ow
 end type
 
-constructor ShootableSystem( e as Entities, c as Components )
+constructor ShootableSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   has( "type:asteroid" )
@@ -352,7 +352,7 @@ sub ShootableSystem.process( dt as double = 0.0d )
 end sub
 
 type HealthSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d )
@@ -361,7 +361,7 @@ type HealthSystem extends System
     as Health ptr h
 end type
 
-constructor HealthSystem( e as Entities, c as Components )
+constructor HealthSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   h = requires( "health" )
@@ -384,7 +384,7 @@ sub HealthSystem.process( dt as double = 0.0d )
 end sub
 
 type AsteroidDestroyedSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   private:
@@ -395,7 +395,7 @@ type AsteroidDestroyedSystem extends System
     as Dimensions ptr d
 end type
 
-constructor AsteroidDestroyedSystem( e as Entities, c as Components )
+constructor AsteroidDestroyedSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
@@ -429,7 +429,7 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
 end sub
 
 type ScoreSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   private:
@@ -439,7 +439,7 @@ type ScoreSystem extends System
     as Score ptr sc
 end type
 
-constructor ScoreSystem( e as Entities, c as Components )
+constructor ScoreSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
@@ -456,7 +456,7 @@ sub ScoreSystem.event_gameEntityDestroyed( _
 end sub
 
 type ShipRenderSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d ) override
@@ -468,7 +468,7 @@ type ShipRenderSystem extends System
     as Appearance ptr a
 end type
 
-constructor ShipRenderSystem( e as Entities, c as Components )
+constructor ShipRenderSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   requires( "type:ship" )
@@ -495,7 +495,7 @@ sub ShipRenderSystem.process( dt as double = 0.0d )
 end sub
 
 type AsteroidRenderSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d ) override
@@ -506,7 +506,7 @@ type AsteroidRenderSystem extends System
     as Appearance ptr a
 end type
 
-constructor AsteroidRenderSystem( e as Entities, c as Components )
+constructor AsteroidRenderSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   requires( "type:asteroid" )
@@ -526,7 +526,7 @@ sub AsteroidRenderSystem.process( dt as double = 0.0d )
 end sub
 
 type BulletRenderSystem extends System
-  declare constructor( as Entities, as Components )
+  declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
   declare sub process( as double = 0.0d ) override
@@ -536,7 +536,7 @@ type BulletRenderSystem extends System
     as Physics ptr ph
 end type
 
-constructor BulletRenderSystem( e as Entities, c as Components )
+constructor BulletRenderSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   requires( "type:bullet" )
