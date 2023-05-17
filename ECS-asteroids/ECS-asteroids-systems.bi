@@ -448,10 +448,6 @@ destructor ScoreSystem()
   ECS.unregisterListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
 end destructor
 
-#macro component( _mc_, _e_, _c_ )
-  ( cast( _c_ ptr, ( _mc_ )[ #_c_ ] )[ _e_ ] )
-#endmacro
-
 sub ScoreSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as ScoreSystem ptr )
   
