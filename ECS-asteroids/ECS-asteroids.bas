@@ -36,7 +36,7 @@ Debug.print( "Registering components..." )
   trait "type:bullet" in myComponents
 Debug.print( "Done" )
 
-Debug.print( myComponents.getDebugInfo() )
+'Debug.print( myComponents.getDebugInfo() )
 
 /'
   Main code
