@@ -1,4 +1,11 @@
-function createShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as ECSEntity
+#ifndef __ECS_ASTEROIDS_ENTITIES__
+#define __ECS_ASTEROIDS_ENTITIES__
+
+#macro ADD_COMPONENT( _mc_, _c_, _e_ )
+  ( *cast( _c_ ptr, _mc_.addComponent( _e_, #_c_ ) ) )
+#endmacro
+
+function newShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as ECSEntity
   var pship = e.create( "playership" )
   
   asComponent( Position, c.addComponent( pship, "position" ) ) _
@@ -42,8 +49,8 @@ function createShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) 
   return( pship )
 end function
 
-function createPlayer( e as ECSEntities, c as ECSComponents ) as ECSEntity
-  var player = e.create( "player" )
+function newPlayer( e as ECSEntities, c as ECSComponents, n as string ) as ECSEntity
+  var player = e.create( n )
   
   asComponent( Health, c.addComponent( player, "health" ) ) _
     .value = 1000.0f
@@ -53,11 +60,7 @@ function createPlayer( e as ECSEntities, c as ECSComponents ) as ECSEntity
   return( player )
 end function
 
-#macro ADD_COMPONENT( _mc_, _c_, _e_ )
-  ( *cast( _c_ ptr, _mc_.addComponent( _e_, #_c_ ) ) )
-#endmacro
-
-function createAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2, s as single ) as ECSEntity
+function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2, s as single ) as ECSEntity
   var asteroid = e.create()
   
   ADD_COMPONENT( c, Position, asteroid ) _
@@ -65,10 +68,15 @@ function createAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as V
   'asComponent( Position, c.addComponent( asteroid, "position" ) ) _
   '  .pos = p
   
-  withComponent( Physics, c.addComponent( asteroid, "physics" ) )
+  with ADD_COMPONENT( c, Physics, asteroid )
     .vel = v
     .maxSpeed = 300.0f
   end with
+  
+  'withComponent( Physics, c.addComponent( asteroid, "physics" ) )
+  '  .vel = v
+  '  .maxSpeed = 300.0f
+  'end with
   
   asComponent( Dimensions, c.addComponent( asteroid, "dimensions" ) ) _
     .size = s
@@ -85,18 +93,7 @@ function createAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as V
   return( asteroid )
 end function
 
-sub createAsteroids( e as ECSEntities, c as ECSComponents, count as long )
-  for i as integer = 1 to count
-    dim as single size = rng( 8.0f, 40.0f )
-    
-    createAsteroid( e, c, _
-      rngWithin( Game.playArea ), _
-      Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f ), _
-      size )
-  next
-end sub
-
-function createBullet( _
+function newBullet( _
   e as ECSEntities, c as ECSComponents, p as Vec2, vel as Vec2, spd as single, lt as single, owner as ECSEntity ) as ECSEntity
   
   var bullet = e.create()
@@ -120,3 +117,14 @@ function createBullet( _
   
   return( bullet )
 end function
+
+sub createAsteroids( e as ECSEntities, c as ECSComponents, count as long )
+  for i as integer = 1 to count
+    dim as single size = rng( 8.0f, 40.0f )
+    
+    newAsteroid( e, c, rngWithin( Game.playArea ), _
+      Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f ), size )
+  next
+end sub
+
+#endif

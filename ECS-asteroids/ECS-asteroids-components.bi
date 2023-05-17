@@ -1,3 +1,6 @@
+#ifndef __ECS_ASTEROIDS_COMPONENTS_
+#define __ECS_ASTEROIDS_COMPONENTS_
+
 type Position
   as Vec2 pos
 end type
@@ -61,3 +64,5 @@ end type
 type Parent
   as ECSEntity id
 end type
+
+#endif
