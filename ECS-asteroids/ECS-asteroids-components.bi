@@ -39,7 +39,7 @@ type Speed
 end type
 
 type Lifetime
-  as single value
+  as single current, max
 end type
 
 type Ship

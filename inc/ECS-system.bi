@@ -37,14 +37,14 @@ type ECSSystem extends Object
     declare function hasOptionalComponent( as ECSEntity ) as boolean
     
     as ECSComponent _required( any )
-    as ECSComponent _has( any )
+    as ECSComponent _optional( any )
     as boolean _isProcessed( any )
     
     as UnorderedList _processed
     as ECSEntities ptr _entities
     as ECSComponents ptr _components
     as long _requiredCount
-    as long _hasCount
+    as long _optionalCount
 end type
 
 constructor ECSSystem() : end constructor
@@ -55,7 +55,7 @@ constructor ECSSystem( e as ECSEntities, c as ECSComponents )
   ECS.registerListener( EV_COMPONENTREMOVED, toHandler( ECSSystem.event_componentRemoved ), @this )
   
   redim _required( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
-  redim _has( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
+  redim _optional( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
   redim _isProcessed( 0 to ECS_MAX_ENTITIES - 1 )
   
   _entities = @e
@@ -69,7 +69,7 @@ destructor ECSSystem()
   ECS.unregisterListener( EV_COMPONENTREMOVED, toHandler( ECSSystem.event_componentRemoved ), @this )
   
   erase( _required )
-  erase( _has )
+  erase( _optional )
   erase( _isProcessed )
 end destructor
 
@@ -97,6 +97,7 @@ property ECSSystem.myComponents() byref as ECSComponents
   return( *_components )
 end property
 
+'' Register a needed component
 function ECSSystem.requires( c as string ) as any ptr
   dim as ECSComponent id = _components->getID( c )
   
@@ -106,11 +107,12 @@ function ECSSystem.requires( c as string ) as any ptr
   return( ( *_components )[ id ] )
 end function
 
+'' Register an optional component
 function ECSSystem.has( c as string ) as any ptr
   dim as ECSComponent id = _components->getID( c )
   
-  _has( _hasCount ) = id
-  _hasCount += 1
+  _optional( _optionalCount ) = id
+  _optionalCount += 1
   
   return( ( *_components )[ id ] )
 end function
@@ -140,11 +142,11 @@ end function
 function ECSSystem.hasOptionalComponent( e as ECSEntity ) as boolean
   dim as long count
   
-  for i as integer = 0 to _hasCount - 1
-    if( _components->hasComponent( e, _has( i ) ) ) then count += 1
+  for i as integer = 0 to _optionalCount - 1
+    if( _components->hasComponent( e, _optional( i ) ) ) then count += 1
   next
   
-  return( cbool( count > 0 ) andAlso _hasCount > 0 )
+  return( cbool( count > 0 ) andAlso _optionalCount > 0 )
 end function
 
 sub ECSSystem.event_entityDestroyed( _
@@ -165,7 +167,7 @@ sub ECSSystem.event_componentAdded( _
   
   if( sender = receiver->_components ) then
     if( not receiver->_isProcessed( e.eID ) andAlso receiver->hasRequiredComponents( e.eID ) ) then
-      if( receiver->_hasCount = 0 orElse receiver->hasOptionalComponent( e.eID ) ) then
+      if( receiver->_optionalCount = 0 orElse receiver->hasOptionalComponent( e.eID ) ) then
         receiver->_isProcessed( e.eID ) = true
         receiver->_processed.add( e.eID )
       end if

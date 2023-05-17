@@ -1,6 +1,26 @@
 #ifndef __ECS_ASTEROIDS_SYSTEMS__
 #define __ECS_ASTEROIDS_SYSTEMS__
 
+#macro require?( _r_, _v_ )
+  _v_ = requires( #_r_ )
+#endmacro
+
+#macro filter?( _v_, _p_, _f_, _r_ )
+var _r_ = UnorderedList( _p_.count )
+
+for each _v_ in _p_
+  if( _f_ ) then
+    _r_.add( e )
+  end if
+next
+#endmacro
+
+#define like ,
+
+#macro has?( _t_ )
+  require( #_t_ )
+#endmacro
+
 enum GAME_EVENTS
   EV_GAME_ENTITYDESTROYED = 1000
 end enum
@@ -39,8 +59,8 @@ end type
 constructor MovableSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  p = requires( "position" )
-  ph = requires( "physics" )
+  require Position in p
+  require Physics in ph
 end constructor
 
 destructor MovableSystem() : end destructor
@@ -95,11 +115,11 @@ end type
 constructor ControllableSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  ctrl = requires( "controls" )
-  params = requires( "controlparameters" )
-  p = requires( "position" )
-  o = requires( "orientation" )
-  ph = requires( "physics" )
+  require Controls in ctrl
+  require ControlParameters in params
+  require Position in p
+  require Orientation in o
+  require Physics in ph
 end constructor
 
 destructor ControllableSystem() : end destructor
@@ -161,7 +181,7 @@ end type
 constructor LifetimeSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  lt = requires( "lifetime" )
+  require Lifetime in lt
 end constructor
 
 destructor LifetimeSystem() : end destructor
@@ -170,9 +190,9 @@ sub LifetimeSystem.process( dt as double = 0.0d )
   var deleted = UnorderedList( processed.count )
   
   for each e as ECSEntity in processed
-    lt[ e ].value -= 1000.0f * dt
+    lt[ e ].current -= 1000.0f * dt
     
-    if( lt[ e ].value < 0 ) then
+    if( lt[ e ].current < 0 ) then
       deleted.add( e )
     end if
   next
@@ -244,10 +264,10 @@ end type
 constructor CollidableSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  p = requires( "position" )
-  ph = requires( "physics" )
-  d = requires( "dimensions" )
-  coll = requires( "collision" )
+  require Position in p
+  require Physics in ph
+  require Dimensions in d
+  require Collision in coll
 end constructor
 
 destructor CollidableSystem() : end destructor
@@ -279,6 +299,11 @@ sub CollidableSystem.process( dt as double = 0.0d )
   next
 end sub
 
+/'
+  TODO
+  
+  Rework this system to be more generic and useable by all entities
+'/
 type ShootableSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
@@ -302,25 +327,14 @@ constructor ShootableSystem( e as ECSEntities, c as ECSComponents )
   
   lt = has( "lifetime" )
   h = has( "health" )
-  p = requires( "position" )
-  d = requires( "dimensions" )
+  
+  require Position in p
+  require Dimensions in d
   
   prnt = myComponents[ "parent" ]
 end constructor
 
 destructor ShootableSystem() : end destructor
-
-#macro filter?( _v_, _p_, _f_, _r_ )
-var _r_ = UnorderedList( _p_.count )
-
-for each _v_ in _p_
-  if( _f_ ) then
-    _r_.add( e )
-  end if
-next
-#endmacro
-
-#define like ,
 
 sub ShootableSystem.process( dt as double = 0.0d )
   filter e as ECSEntity in processed like contains( e, "type:bullet" ) in bullets
@@ -340,10 +354,10 @@ sub ShootableSystem.process( dt as double = 0.0d )
         '' Collided
         circle( abb.center.x, abb.center.y ), d[ a ].size, WHITE, , , , f
         
-        lt[ b ].value = 0.0f
+        lt[ b ].current = 0.0f
         h[ a ].value -= 30.0f
         
-        '' Did we destroy the asteroid?
+        '' Did we destroy it?
         if( h[ a ].value < 0.0f ) then
           ECS.raiseEvent( EV_GAME_ENTITYDESTROYED, _
             GameEntityDestroyedEventArgs( a, prnt[ b ].id, myEntities, myComponents ), @this )
@@ -366,7 +380,7 @@ end type
 constructor HealthSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  h = requires( "health" )
+  require Health in h
 end constructor
 
 destructor HealthSystem() : end destructor
@@ -402,8 +416,8 @@ constructor AsteroidDestroyedSystem( e as ECSEntities, c as ECSComponents )
   
   ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
   
-  p = cast( Position ptr, myComponents[ "position" ] )
-  d = cast( Dimensions ptr,myComponents[ "dimensions" ] )
+  require Position in p
+  require Dimensions in d
 end constructor
 
 destructor AsteroidDestroyedSystem()
@@ -445,6 +459,8 @@ constructor ScoreSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
   ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+  
+  require Score in sc
 end constructor
 
 destructor ScoreSystem()
@@ -476,11 +492,12 @@ end type
 constructor ShipRenderSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  requires( "type:ship" )
-  p = requires( "position" ) 
-  o = requires( "orientation" )
-  d = requires( "dimensions" )
-  a = requires( "appearance" )
+  has "type:ship"
+  
+  require Position in p
+  require Orientation in o
+  require Dimensions in d
+  require Appearance in a
 end constructor
 
 destructor ShipRenderSystem() : end destructor
@@ -514,10 +531,11 @@ end type
 constructor AsteroidRenderSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  requires( "type:asteroid" )
-  p = requires( "position" )
-  d = requires( "dimensions" )
-  a = requires( "appearance" )
+  has "type:asteroid"
+  
+  require Position in p
+  require Dimensions in d
+  require Appearance in a
 end constructor
 
 destructor AsteroidRenderSystem() : end destructor
@@ -544,9 +562,10 @@ end type
 constructor BulletRenderSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  requires( "type:bullet" )
-  p = requires( "position" )
-  ph = requires( "physics" )
+  has "type:bullet"
+  
+  require Position in p
+  require Physics in ph
 end constructor
 
 destructor BulletRenderSystem() : end destructor
