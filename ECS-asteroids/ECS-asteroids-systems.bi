@@ -1,3 +1,6 @@
+#ifndef __ECS_ASTEROIDS_SYSTEMS__
+#define __ECS_ASTEROIDS_SYSTEMS__
+
 enum GAME_EVENTS
   EV_GAME_ENTITYDESTROYED = 1000
 end enum
@@ -68,7 +71,7 @@ sub shoot( e as ECSEntities, c as ECSComponents, _
   var vel = o.dir.rotated( rad( rng( -3.0f, 3.0f ) ) ).normalize()
   
   '' Spawn bullet
-  createBullet( e, c, m.pos, vel, 500.0f, 2000.0f, owner )
+  newBullet( e, c, m.pos, vel, 500.0f, 2000.0f, owner )
   
   '' Add a little backwards acceleration to the shooting entity
   '' when firing.
@@ -179,30 +182,6 @@ sub LifetimeSystem.process( dt as double = 0.0d )
   next
 end sub
 
-type CollidableSystem extends ECSSystem
-  declare constructor( as ECSEntities, as ECSComponents )
-  declare destructor() override
-  
-  declare sub process( as double = 0.0d ) override
-  
-  private:
-    as Position ptr p
-    as Physics ptr ph
-    as Dimensions ptr d
-    as Collision ptr coll
-end type
-
-constructor CollidableSystem( e as ECSEntities, c as ECSComponents )
-  base( e, c )
-  
-  p = requires( "position" )
-  ph = requires( "physics" )
-  d = requires( "dimensions" )
-  coll = requires( "collision" )
-end constructor
-
-destructor CollidableSystem() : end destructor
-
 '' Physics and collision detection and response
 function getCollisionNormal( N as Vec2, v1 as Vec2, v2 as Vec2 ) as Vec2
   '' Compute tangent vector to normal and relative velocities
@@ -248,6 +227,30 @@ function collided( _
   '' Resolve the collision
   return( resolveCollision( a1, a2, vN, vel1, vel2 ) )
 end function
+
+type CollidableSystem extends ECSSystem
+  declare constructor( as ECSEntities, as ECSComponents )
+  declare destructor() override
+  
+  declare sub process( as double = 0.0d ) override
+  
+  private:
+    as Position ptr p
+    as Physics ptr ph
+    as Dimensions ptr d
+    as Collision ptr coll
+end type
+
+constructor CollidableSystem( e as ECSEntities, c as ECSComponents )
+  base( e, c )
+  
+  p = requires( "position" )
+  ph = requires( "physics" )
+  d = requires( "dimensions" )
+  coll = requires( "collision" )
+end constructor
+
+destructor CollidableSystem() : end destructor
 
 sub CollidableSystem.process( dt as double = 0.0d )
   var a1 = BoundingCircle()
@@ -417,8 +420,8 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
     dim as single size = s * 0.25
     
     if( size >= 4.0f ) then
-      for i as integer = 1 to 4
-        createAsteroid( *e.e, *e.c, p, rndNormal() * ( 400.0f - size * 10.0f ), size )
+      for i as integer = 1 to 3
+        newAsteroid( *e.e, *e.c, p, rndNormal() * ( 400.0f - size * 10.0f ), size )
       next
     end if
     
@@ -557,3 +560,5 @@ sub BulletRenderSystem.process( dt as double = 0.0d )
     end with
   next
 end sub
+
+#endif

@@ -5,7 +5,7 @@ using FbGame
 
 #include once "ECS-asteroids-commons.bi"
 #include once "ECS-asteroids-components.bi"
-#include once "ECS-asteroids-factories.bi"
+#include once "ECS-asteroids-entities.bi"
 #include once "ECS-asteroids-systems.bi"
 
 Debug.toConsole()
@@ -36,7 +36,7 @@ Debug.print( "Registering components..." )
   trait "type:bullet" in myComponents
 Debug.print( "Done" )
 
-'Debug.print( myComponents.getDebugInfo() )
+Debug.print( myComponents.getDebugInfo() )
 
 /'
   Main code
@@ -62,12 +62,12 @@ _DEBUG var s_health = HealthSystem( myEntities, myComponents )
 _DEBUG var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
 _DEBUG var s_score = ScoreSystem( myEntities, myComponents )
 
-'Debug.print( "Done." )
+Debug.print( "Done." )
 
 Debug.print( "Creating entities..." )
 '' Create entities
-_DEBUG var player = createPlayer( myEntities, myComponents )
-_DEBUG createShip( myEntities, myComponents, myEntities.find( "player" ) )
+_DEBUG var player = newPlayer( myEntities, myComponents, "player" )
+_DEBUG newShip( myEntities, myComponents, myEntities.find( "player" ) )
 _DEBUG createAsteroids( myEntities, myComponents, 30 )
 Debug.print( "Done." )
 
@@ -118,7 +118,7 @@ do
       s_shoot.process()
       
       ? "FPS: " & int( 1 / ( frameTime  / count ) )
-      ? "Score: " & ( *cast( Score ptr, myComponents.getComponent( player, "score" ) ) ).value
+      ? "Score: " & component( myComponents, player, Score ).value
       ? "Update: " & int( 1 / ( updateTotal / count ) ) & " (" & int( ( updateTotal / frameTime ) * 100 ) & "%)"
       ? "Render: " & int( 1 / ( renderTotal / count ) ) & " (" & int( ( renderTotal / frameTime ) * 100 ) & "%)" 
     flip()
