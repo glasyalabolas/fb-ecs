@@ -1,26 +1,6 @@
 #ifndef __ECS_ASTEROIDS_SYSTEMS__
 #define __ECS_ASTEROIDS_SYSTEMS__
 
-#macro require?( _r_, _v_ )
-  _v_ = requires( #_r_ )
-#endmacro
-
-#macro filter?( _v_, _p_, _f_, _r_ )
-var _r_ = UnorderedList( _p_.count )
-
-for each _v_ in _p_
-  if( _f_ ) then
-    _r_.add( e )
-  end if
-next
-#endmacro
-
-#define like ,
-
-#macro has?( _t_ )
-  require( #_t_ )
-#endmacro
-
 enum GAME_EVENTS
   EV_GAME_ENTITYDESTROYED = 1000
 end enum

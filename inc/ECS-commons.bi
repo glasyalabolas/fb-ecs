@@ -70,11 +70,25 @@ end function
 #endmacro
 
 '' Experimental syntax
-#macro withComponent( _c_, _p_ )
-  with ( *cast( _c_ ptr, _p_ ) )
+#macro require?( _r_, _v_ )
+  _v_ = requires( #_r_ )
 #endmacro
 
-#define asComponent( _c_, _p_ ) ( *cast( _c_ ptr, _p_ ) )
+#macro filter?( _v_, _p_, _f_, _r_ )
+var _r_ = UnorderedList( _p_.count )
+
+for each _v_ in _p_
+  if( _f_ ) then
+    _r_.add( e )
+  end if
+next
+#endmacro
+
+#define like ,
+
+'#macro has?( _t_ )
+'  require( #_t_ )
+'#endmacro
 
 #define in ,
 
