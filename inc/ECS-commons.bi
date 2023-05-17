@@ -62,6 +62,13 @@ function hashstr( x as string ) as ulong
   return( h )
 end function
 
+#macro _DEBUG?( _n_ )
+  #if defined( ECS_DEBUG_ON )
+    Debug.print( #_n_ )
+  #endif
+  _n_
+#endmacro
+
 '' Experimental syntax
 #macro withComponent( _c_, _p_ )
   with ( *cast( _c_ ptr, _p_ ) )
@@ -86,6 +93,10 @@ end function
 
 #macro component( _mc_, _e_, _c_ )
   ( cast( _c_ ptr, ( _mc_ )[ #_c_ ] )[ _e_ ] )
+#endmacro
+
+#macro ADD_COMPONENT?( _mc_, _c_, _e_ )
+  ( *cast( _c_ ptr, _mc_.addComponent( _e_, #_c_ ) ) )
 #endmacro
 
 #endif
