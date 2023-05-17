@@ -108,8 +108,14 @@ function newBullet( _
   
   asComponent( Dimensions, c.addComponent( bullet, "dimensions" ) ) _
     .size = 4.0f
-  asComponent( Lifetime, c.addComponent( bullet, "lifetime" ) ) _
-    .value = lt
+  
+  with ADD_COMPONENT( c, Lifetime, bullet )
+    .max = lt
+    .current = .max
+  end with
+  
+  'asComponent( Lifetime, c.addComponent( bullet, "lifetime" ) ) _
+  '  .value = lt
   asComponent( Parent, c.addComponent( bullet, "parent" ) ) _
     .id = owner
   
