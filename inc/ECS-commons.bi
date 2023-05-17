@@ -84,4 +84,8 @@ end function
   _cmp_.registerComponent( _c_ )
 #endmacro
 
+#macro component( _mc_, _e_, _c_ )
+  ( cast( _c_ ptr, ( _mc_ )[ #_c_ ] )[ _e_ ] )
+#endmacro
+
 #endif
