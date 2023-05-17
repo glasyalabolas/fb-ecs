@@ -19,7 +19,7 @@ function newShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as 
   with ADD_COMPONENT( c, ControlParameters, pship )
     .accel = 550.0f
     .turnSpeed = 360.0f
-    .rateOfFire = 50.0f
+    .rateOfFire = 100.0f
   end with
   
   with ADD_COMPONENT( c, Controls, pship )

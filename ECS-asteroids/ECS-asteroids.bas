@@ -59,6 +59,8 @@ _DEBUG var s_health = HealthSystem( myEntities, myComponents )
 _DEBUG var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
 _DEBUG var s_score = ScoreSystem( myEntities, myComponents )
 
+var s_move2 = MovableSystem( myEntities, myComponents )
+
 Debug.print( "Done." )
 
 Debug.print( "Creating entities..." )
