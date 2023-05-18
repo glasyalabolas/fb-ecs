@@ -8,6 +8,8 @@ using FbGame
 #include once "ECS-asteroids-entities.bi"
 #include once "ECS-asteroids-systems.bi"
 
+#define ECS_DEBUG_ON
+
 Debug.toConsole()
 
 Debug.print( "Creating entities and components..." )
@@ -43,11 +45,6 @@ Debug.print( myComponents.getDebugInfo() )
 '/
 Game.init( 800, 600 )
 
-#macro _DEBUG?( _n_ )
-  Debug.print( #_n_ )
-  _n_
-#endmacro
-
 '' Instantiate systems before creating entities
 Debug.print( "Instantiating systems..." )
 _DEBUG var s_lifetime = LifetimeSystem( myEntities, myComponents )
@@ -61,6 +58,8 @@ _DEBUG var s_shoot = ShootableSystem( myEntities, myComponents )
 _DEBUG var s_health = HealthSystem( myEntities, myComponents )
 _DEBUG var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
 _DEBUG var s_score = ScoreSystem( myEntities, myComponents )
+
+var s_move2 = MovableSystem( myEntities, myComponents )
 
 Debug.print( "Done." )
 

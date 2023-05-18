@@ -5,8 +5,8 @@ const as long ECS_MAX_ENTITIES = 5000
 const as long ECS_MAX_COMPONENTS = 200
 const as long ECS_MAX_COMPONENTS_PER_ENTITY = 32
 
-type as short ECSEntity
-type as short ECSComponent
+type as long ECSEntity
+type as long ECSComponent
 type as string ECS_DATA_BUFFER
 
 function hash_32( x as ulong ) as ulong
@@ -62,12 +62,33 @@ function hashstr( x as string ) as ulong
   return( h )
 end function
 
-'' Experimental syntax
-#macro withComponent( _c_, _p_ )
-  with ( *cast( _c_ ptr, _p_ ) )
+#macro _DEBUG?( _n_ )
+  #if defined( ECS_DEBUG_ON )
+    Debug.print( #_n_ )
+  #endif
+  _n_
 #endmacro
 
-#define asComponent( _c_, _p_ ) ( *cast( _c_ ptr, _p_ ) )
+'' Experimental syntax
+#macro require?( _r_, _v_ )
+  _v_ = requires( #_r_ )
+#endmacro
+
+#macro filter?( _v_, _p_, _f_, _r_ )
+var _r_ = UnorderedList( _p_.count )
+
+for each _v_ in _p_
+  if( _f_ ) then
+    _r_.add( e )
+  end if
+next
+#endmacro
+
+#define like ,
+
+'#macro has?( _t_ )
+'  require( #_t_ )
+'#endmacro
 
 #define in ,
 
@@ -86,6 +107,10 @@ end function
 
 #macro component( _mc_, _e_, _c_ )
   ( cast( _c_ ptr, ( _mc_ )[ #_c_ ] )[ _e_ ] )
+#endmacro
+
+#macro ADD_COMPONENT?( _mc_, _c_, _e_ )
+  ( *cast( _c_ ptr, _mc_.addComponent( _e_, #_c_ ) ) )
 #endmacro
 
 #endif

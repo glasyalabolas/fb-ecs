@@ -66,7 +66,7 @@ static as KeyboardInput Game.keyboard
 static as BoundingBox Game.playArea = BoundingBox()
 
 sub Game.init( xRes as long, yRes as long )
-  screenRes( xRes, yRes, 32, 2 )
+  screenRes( xRes, yRes, 32, 2, Fb.GFX_ALPHA_PRIMITIVES )
   screenSet( 0, 1 )
   
   randomize()

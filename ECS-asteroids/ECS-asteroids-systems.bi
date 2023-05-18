@@ -1,26 +1,6 @@
 #ifndef __ECS_ASTEROIDS_SYSTEMS__
 #define __ECS_ASTEROIDS_SYSTEMS__
 
-#macro require?( _r_, _v_ )
-  _v_ = requires( #_r_ )
-#endmacro
-
-#macro filter?( _v_, _p_, _f_, _r_ )
-var _r_ = UnorderedList( _p_.count )
-
-for each _v_ in _p_
-  if( _f_ ) then
-    _r_.add( e )
-  end if
-next
-#endmacro
-
-#define like ,
-
-#macro has?( _t_ )
-  require( #_t_ )
-#endmacro
-
 enum GAME_EVENTS
   EV_GAME_ENTITYDESTROYED = 1000
 end enum
@@ -338,7 +318,7 @@ destructor ShootableSystem() : end destructor
 
 sub ShootableSystem.process( dt as double = 0.0d )
   filter e as ECSEntity in processed like contains( e, "type:bullet" ) in bullets
-  filter e as ECSEntity in processed like not contains( e, "type:bullet" ) in asteroids
+  filter e as ECSEntity in processed like not contains( e, "type:bullet" ) in other
   
   var abb = BoundingCircle(), bbb = BoundingCircle()
   
@@ -346,19 +326,19 @@ sub ShootableSystem.process( dt as double = 0.0d )
     bbb.center = p[ b ].pos
     bbb.radius = d[ b ].size
     
-    for each a as ECSEntity in asteroids
+    for each a as ECSEntity in other
       abb.center = p[ a ].pos
       abb.radius = d[ a ].size
       
-      if( bbb.overlapsWith( abb ) ) then
+      if( a <> prnt[ b ].id andAlso bbb.overlapsWith( abb ) ) then
         '' Collided
         circle( abb.center.x, abb.center.y ), d[ a ].size, WHITE, , , , f
         
         lt[ b ].current = 0.0f
-        h[ a ].value -= 30.0f
+        h[ a ].current -= 30.0f
         
         '' Did we destroy it?
-        if( h[ a ].value < 0.0f ) then
+        if( h[ a ].current < 0.0f ) then
           ECS.raiseEvent( EV_GAME_ENTITYDESTROYED, _
             GameEntityDestroyedEventArgs( a, prnt[ b ].id, myEntities, myComponents ), @this )
         end if
@@ -389,7 +369,7 @@ sub HealthSystem.process( dt as double = 0.0d )
   var destroyed = UnorderedList( processed.count )
   
   for each e as ECSEntity in processed
-    if( h[ e ].value < 0.0f ) then
+    if( h[ e ].current < 0.0f ) then
       destroyed.add( e )
     end if
   next
@@ -557,6 +537,7 @@ type BulletRenderSystem extends ECSSystem
   private:
     as Position ptr p
     as Physics ptr ph
+    as Lifetime ptr lt
 end type
 
 constructor BulletRenderSystem( e as ECSEntities, c as ECSComponents )
@@ -566,16 +547,19 @@ constructor BulletRenderSystem( e as ECSEntities, c as ECSComponents )
   
   require Position in p
   require Physics in ph
+  require Lifetime in lt
 end constructor
 
 destructor BulletRenderSystem() : end destructor
 
 sub BulletRenderSystem.process( dt as double = 0.0d )
   for each e as ECSEntity in processed
+    dim as long a = remap( lt[ e ].current, 0, lt[ e ].max, 0, 255 )
+    
     with p[ e ]
-      circle( .pos.x, .pos.y ), 4, BLUE
-      circle( .pos.x, .pos.y ), 3, rgb( 168, 228, 251 )
-      circle( .pos.x, .pos.y ), 2, WHITE, , , , f
+      circle( .pos.x, .pos.y ), 4, rgba( 0, 0, 255, a )
+      circle( .pos.x, .pos.y ), 3, rgba( 168, 228, 251, a )
+      circle( .pos.x, .pos.y ), 2, rgba( 255, 255, 255, a ), , , , f
     end with
   next
 end sub

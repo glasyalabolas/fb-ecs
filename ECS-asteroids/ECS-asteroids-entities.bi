@@ -1,36 +1,28 @@
 #ifndef __ECS_ASTEROIDS_ENTITIES__
 #define __ECS_ASTEROIDS_ENTITIES__
 
-#macro ADD_COMPONENT( _mc_, _c_, _e_ )
-  ( *cast( _c_ ptr, _mc_.addComponent( _e_, #_c_ ) ) )
-#endmacro
-
 function newShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as ECSEntity
   var pship = e.create( "playership" )
   
-  asComponent( Position, c.addComponent( pship, "position" ) ) _
+  ADD_COMPONENT( c, Position, pship ) _
     .pos = Vec2( Game.playArea.width / 2, Game.playArea.height / 2 )
-
-  asComponent( Orientation, c.addComponent( pship, "orientation" ) ) _
-    .dir = Vec2( 0.0, -1.0 )
+  ADD_COMPONENT( c, Orientation, pship ).dir = Vec2( 0.0, -1.0 )
   
-  withComponent( Physics, c.addComponent( pship, "physics" ) )
+  with ADD_COMPONENT( c, Physics, pship )
     .vel = Vec2( 0.0, 0.0 )
     .maxSpeed = 300.0f
   end with
   
-  asComponent( Dimensions, c.addComponent( pship, "dimensions" ) ) _
-    .size = 20.0f
-  asComponent( Appearance, c.addComponent( pship, "appearance" ) ) _
-    .color = YELLOW
+  ADD_COMPONENT( c, Dimensions, pship ).size = 20.0f
+  ADD_COMPONENT( c, Appearance, pship ).color = YELLOW
   
-  withComponent( ControlParameters, c.addComponent( pship, "controlparameters" ) )
+  with ADD_COMPONENT( c, ControlParameters, pship )
     .accel = 550.0f
     .turnSpeed = 360.0f
-    .rateOfFire = 50.0f
+    .rateOfFire = 150.0f
   end with
   
-  withComponent( Controls, c.addComponent( pship, "controls" ) )
+  with ADD_COMPONENT( c, Controls, pship )
     .forward = Fb.SC_UP
     .backward = Fb.SC_DOWN
     .rotateLeft = Fb.SC_LEFT
@@ -39,10 +31,13 @@ function newShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as 
     .strafe = Fb.SC_LSHIFT
   end with
   
-  asComponent( Collision, c.addComponent( pship, "collision" ) ) _
-    .radius = 5.0f
-  asComponent( Parent, c.addComponent( pship, "parent" ) ) _
-    .id = owner
+  with ADD_COMPONENT( c, Health, pship )
+    .max = 1000.0f
+    .current = .max
+  end with
+  
+  ADD_COMPONENT( c, Collision, pship ).radius = 5.0f
+  ADD_COMPONENT( c, Parent, pship ).id = owner
   
   c.addComponent( pship, "type:ship" )
   
@@ -52,10 +47,7 @@ end function
 function newPlayer( e as ECSEntities, c as ECSComponents, n as string ) as ECSEntity
   var player = e.create( n )
   
-  asComponent( Health, c.addComponent( player, "health" ) ) _
-    .value = 1000.0f
-  asComponent( Score, c.addComponent( player, "score" ) ) _
-    .value = 0
+  ADD_COMPONENT( c, Score, player ).value = 0
   
   return( player )
 end function
@@ -63,61 +55,49 @@ end function
 function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2, s as single ) as ECSEntity
   var asteroid = e.create()
   
-  ADD_COMPONENT( c, Position, asteroid ) _
-    .pos = p
-  'asComponent( Position, c.addComponent( asteroid, "position" ) ) _
-  '  .pos = p
+  ADD_COMPONENT( c, Position, asteroid ).pos = p
   
   with ADD_COMPONENT( c, Physics, asteroid )
     .vel = v
     .maxSpeed = 300.0f
   end with
   
-  'withComponent( Physics, c.addComponent( asteroid, "physics" ) )
-  '  .vel = v
-  '  .maxSpeed = 300.0f
-  'end with
+  ADD_COMPONENT( c, Dimensions, asteroid ).size = s
+  ADD_COMPONENT( c, Appearance, asteroid ).color = RED
   
-  asComponent( Dimensions, c.addComponent( asteroid, "dimensions" ) ) _
-    .size = s
-  asComponent( Appearance, c.addComponent( asteroid, "appearance" ) ) _
-    .color = RED
-  asComponent( Health, c.addComponent( asteroid, "health" ) ) _
-    .value = 5.0f * s
-  asComponent( Collision, c.addComponent( asteroid, "collision" ) ) _
-    .radius = s
-  asComponent( ScoreValue, c.addComponent( asteroid, "scorevalue" ) ) _
-    .value = 500 / s
+  with ADD_COMPONENT( c, Health, asteroid )
+    .max = 5.0f * s
+    .current = .max
+  end with
+  
+  ADD_COMPONENT( c, Collision, asteroid ).radius = s
+  ADD_COMPONENT( c, ScoreValue, asteroid ).value = 500 / s
+  
   c.addComponent( asteroid, "type:asteroid" )
   
   return( asteroid )
 end function
 
-function newBullet( _
-  e as ECSEntities, c as ECSComponents, p as Vec2, vel as Vec2, spd as single, lt as single, owner as ECSEntity ) as ECSEntity
+function newBullet( e as ECSEntities, c as ECSComponents, _
+  p as Vec2, vel as Vec2, spd as single, lt as single, owner as ECSEntity ) as ECSEntity
   
   var bullet = e.create()
   
-  asComponent( Position, c.addComponent( bullet, "position" ) ) _
-    .pos = p
+  ADD_COMPONENT( c, Position, bullet ).pos = p
   
-  withComponent( Physics, c.addComponent( bullet, "physics" ) )
+  with ADD_COMPONENT( c, Physics, bullet )
     .vel = vel.normalized() * spd
     .maxSpeed = 500.0f
   end with
   
-  asComponent( Dimensions, c.addComponent( bullet, "dimensions" ) ) _
-    .size = 4.0f
+  ADD_COMPONENT( c, Dimensions, bullet ).size = 4.0f
   
   with ADD_COMPONENT( c, Lifetime, bullet )
     .max = lt
     .current = .max
   end with
   
-  'asComponent( Lifetime, c.addComponent( bullet, "lifetime" ) ) _
-  '  .value = lt
-  asComponent( Parent, c.addComponent( bullet, "parent" ) ) _
-    .id = owner
+  ADD_COMPONENT( c, Parent, bullet ).id = owner
   
   c.addComponent( bullet, "type:bullet" )
   
