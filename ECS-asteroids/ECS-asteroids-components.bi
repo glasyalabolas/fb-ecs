@@ -66,7 +66,7 @@ type Parent
 end type
 
 type AsteroidRenderData
-  as single radius
+  'as single radius
   as long faces
   as Vec2 points( any )
 end type

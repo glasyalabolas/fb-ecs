@@ -75,14 +75,14 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
   ADD_COMPONENT( c, ScoreValue, asteroid ).value = 500 / s
   
   with ADD_COMPONENT( c, AsteroidRenderData, asteroid )
-    .radius = s'rng( 8.0f, 30.0f )
+    '.radius = s
     .faces = rng( 8, 14 )
     redim .points( 0 to .faces - 1 )
     
     dim as single iFaces = 1.0f / .faces
     
     for i as integer = 0 to .faces - 1
-      .points( i ) = Polar( rng( .radius * 0.5f, .radius ), rad( ( 360.0f * iFaces ) * i ) )
+      .points( i ) = Polar( rng( s * 0.5f, s ), rad( ( 360.0f * iFaces ) * i ) )
     next
   end with
   
