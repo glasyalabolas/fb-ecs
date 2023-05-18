@@ -23,7 +23,7 @@ type Dimensions
 end type
 
 type Health
-  as single value
+  as single current, max
 end type
 
 type Score

@@ -19,7 +19,7 @@ function newShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as 
   with ADD_COMPONENT( c, ControlParameters, pship )
     .accel = 550.0f
     .turnSpeed = 360.0f
-    .rateOfFire = 100.0f
+    .rateOfFire = 150.0f
   end with
   
   with ADD_COMPONENT( c, Controls, pship )
@@ -29,6 +29,11 @@ function newShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as 
     .rotateRight = Fb.SC_RIGHT
     .fire = Fb.SC_SPACE
     .strafe = Fb.SC_LSHIFT
+  end with
+  
+  with ADD_COMPONENT( c, Health, pship )
+    .max = 1000.0f
+    .current = .max
   end with
   
   ADD_COMPONENT( c, Collision, pship ).radius = 5.0f
@@ -42,7 +47,6 @@ end function
 function newPlayer( e as ECSEntities, c as ECSComponents, n as string ) as ECSEntity
   var player = e.create( n )
   
-  ADD_COMPONENT( c, Health, player ).value = 1000.0f
   ADD_COMPONENT( c, Score, player ).value = 0
   
   return( player )
@@ -62,7 +66,8 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
   ADD_COMPONENT( c, Appearance, asteroid ).color = RED
   
   with ADD_COMPONENT( c, Health, asteroid )
-    .value = 5.0f * s
+    .max = 5.0f * s
+    .current = .max
   end with
   
   ADD_COMPONENT( c, Collision, asteroid ).radius = s
