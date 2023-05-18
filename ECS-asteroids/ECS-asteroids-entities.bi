@@ -1,7 +1,7 @@
 #ifndef __ECS_ASTEROIDS_ENTITIES__
 #define __ECS_ASTEROIDS_ENTITIES__
 
-function newShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as ECSEntity
+function newShip( e as ECSEntities, c as ECSComponents, parent as ECSEntity ) as ECSEntity
   var pship = e.create( "playership" )
   
   ADD_COMPONENT( c, Position, pship ) _
@@ -37,9 +37,10 @@ function newShip( e as ECSEntities, c as ECSComponents, owner as ECSEntity ) as 
   end with
   
   ADD_COMPONENT( c, Collision, pship ).radius = 5.0f
-  ADD_COMPONENT( c, Parent, pship ).id = owner
+  ADD_COMPONENT( c, Parent, pship ).id = parent
   
   c.addComponent( pship, "type:ship" )
+  c.addComponent( pship, "trait:destructible" )
   
   return( pship )
 end function
@@ -73,7 +74,20 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
   ADD_COMPONENT( c, Collision, asteroid ).radius = s
   ADD_COMPONENT( c, ScoreValue, asteroid ).value = 500 / s
   
+  with ADD_COMPONENT( c, AsteroidRenderData, asteroid )
+    .radius = s'rng( 8.0f, 30.0f )
+    .faces = rng( 8, 14 )
+    redim .points( 0 to .faces - 1 )
+    
+    dim as single iFaces = 1.0f / .faces
+    
+    for i as integer = 0 to .faces - 1
+      .points( i ) = Polar( rng( .radius * 0.5f, .radius ), rad( ( 360.0f * iFaces ) * i ) )
+    next
+  end with
+  
   c.addComponent( asteroid, "type:asteroid" )
+  c.addComponent( asteroid, "trait:destructible" )
   
   return( asteroid )
 end function
