@@ -279,12 +279,7 @@ sub CollidableSystem.process( dt as double = 0.0d )
   next
 end sub
 
-/'
-  TODO
-  
-  Rework this system to be more generic and useable by all entities
-'/
-type ShootableSystem extends ECSSystem
+type DestructibleSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
   
@@ -299,10 +294,10 @@ type ShootableSystem extends ECSSystem
     as Parent ptr prnt
 end type
 
-constructor ShootableSystem( e as ECSEntities, c as ECSComponents )
+constructor DestructibleSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  has( "type:asteroid" )
+  has( "trait:destructible" )
   has( "type:bullet" )
   
   lt = has( "lifetime" )
@@ -314,11 +309,11 @@ constructor ShootableSystem( e as ECSEntities, c as ECSComponents )
   prnt = myComponents[ "parent" ]
 end constructor
 
-destructor ShootableSystem() : end destructor
+destructor DestructibleSystem() : end destructor
 
-sub ShootableSystem.process( dt as double = 0.0d )
+sub DestructibleSystem.process( dt as double = 0.0d )
   filter e as ECSEntity in processed like contains( e, "type:bullet" ) in bullets
-  filter e as ECSEntity in processed like not contains( e, "type:bullet" ) in other
+  filter e as ECSEntity in processed like contains( e, "trait:destructible" ) in other
   
   var abb = BoundingCircle(), bbb = BoundingCircle()
   
@@ -330,8 +325,9 @@ sub ShootableSystem.process( dt as double = 0.0d )
       abb.center = p[ a ].pos
       abb.radius = d[ a ].size
       
+      '' Make sure we don't damage ourselves with our own bullets
       if( a <> prnt[ b ].id andAlso bbb.overlapsWith( abb ) ) then
-        '' Collided
+        '' Collided?
         circle( abb.center.x, abb.center.y ), d[ a ].size, WHITE, , , , f
         
         lt[ b ].current = 0.0f
@@ -407,10 +403,12 @@ end destructor
 sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as AsteroidDestroyedSystem ptr )
   
+  '' Was the destroyed entity an asteroid?
   if( e.c->hasComponent( e.destroyed, "type:asteroid" ) ) then
     var p = receiver->p[ e.destroyed ].pos
     var s = receiver->d[ e.destroyed ].size
     
+    '' Break the asteroid into smaller pieces if it's a large one
     dim as single size = s * 0.25
     
     if( size >= 4.0f ) then
@@ -418,9 +416,6 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
         newAsteroid( *e.e, *e.c, p, rndNormal() * ( 400.0f - size * 10.0f ), size )
       next
     end if
-    
-    Debug.print( "I was killed by: " & e.e->getName( e.author ) )
-    Debug.print( "Its parent is: " & e.e->getName( cast( Parent ptr, ( *e.c )[ "parent" ] )[ e.author ].id ) )
   end if
 end sub
 
@@ -506,6 +501,7 @@ type AsteroidRenderSystem extends ECSSystem
     as Position ptr p
     as Dimensions ptr d
     as Appearance ptr a
+    as AsteroidRenderData ptr ard
 end type
 
 constructor AsteroidRenderSystem( e as ECSEntities, c as ECSComponents )
@@ -516,6 +512,7 @@ constructor AsteroidRenderSystem( e as ECSEntities, c as ECSComponents )
   require Position in p
   require Dimensions in d
   require Appearance in a
+  require AsteroidRenderData in ard
 end constructor
 
 destructor AsteroidRenderSystem() : end destructor
@@ -523,7 +520,15 @@ destructor AsteroidRenderSystem() : end destructor
 sub AsteroidRenderSystem.process( dt as double = 0.0d )
   for each e as ECSEntity in processed
     with p[ e ]
-      circle( .pos.x, .pos.y ), d[ e ].size, a[ e ].color, , , , f
+      pset( .pos.x + ard[ e ].points( 0 ).x, .pos.y + ard[ e ].points( 0 ).y ), rgb( 255, 255, 255 )
+      
+      for i as integer = 1 to ard[ e ].faces - 1
+        line -( .pos.x + ard[ e ].points( i ).x, .pos.y + ard[ e ].points( i ).y ), rgb( 255, 255, 255 )
+      next
+      
+      line -( .pos.x + ard[ e ].points( 0 ).x, .pos.y + ard[ e ].points( 0 ).y ), rgb( 255, 255, 255 )
+      
+      'circle( .pos.x, .pos.y ), d[ e ].size, a[ e ].color, , , , f
     end with
   next
 end sub

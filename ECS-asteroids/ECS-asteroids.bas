@@ -32,10 +32,12 @@ Debug.print( "Registering components..." )
   register ControlParameters in myComponents
   register Collision in myComponents
   register Parent in myComponents
+  register AsteroidRenderData in myComponents
   
   trait "type:ship" in myComponents
   trait "type:asteroid" in myComponents
   trait "type:bullet" in myComponents
+  trait "trait:destructible" in myComponents
 Debug.print( "Done" )
 
 Debug.print( myComponents.getDebugInfo() )
@@ -54,7 +56,7 @@ _DEBUG var s_renderBullets = BulletRenderSystem( myEntities, myComponents )
 _DEBUG var s_move = MovableSystem( myEntities, myComponents )
 _DEBUG var s_control = ControllableSystem( myEntities, myComponents )
 _DEBUG var s_collision = CollidableSystem( myEntities, myComponents )
-_DEBUG var s_shoot = ShootableSystem( myEntities, myComponents )
+_DEBUG var s_destr = DestructibleSystem( myEntities, myComponents )
 _DEBUG var s_health = HealthSystem( myEntities, myComponents )
 _DEBUG var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
 _DEBUG var s_score = ScoreSystem( myEntities, myComponents )
@@ -67,7 +69,7 @@ Debug.print( "Creating entities..." )
 '' Create entities
 _DEBUG var player = newPlayer( myEntities, myComponents, "player" )
 _DEBUG newShip( myEntities, myComponents, myEntities.find( "player" ) )
-_DEBUG createAsteroids( myEntities, myComponents, 30 )
+_DEBUG createAsteroids( myEntities, myComponents, 20 )
 Debug.print( "Done." )
 
 dim as double dt, updateTime, updateTotal, renderTime, renderTotal, frameTime
@@ -114,7 +116,7 @@ do
       s_renderBullets.process()
       s_renderShip.process()
       s_renderAsteroids.process()
-      s_shoot.process()
+      s_destr.process()
       
       ? "FPS: " & int( 1 / ( frameTime  / count ) )
       ? "Score: " & component( myComponents, player, Score ).value
