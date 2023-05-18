@@ -445,10 +445,8 @@ end destructor
 sub ScoreSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as ScoreSystem ptr )
   
-  if( e.e->getName( e.author ) = "playership" ) then
-    component( *e.c, component( *e.c, e.author, Parent ).id, Score ) _
-      .value += component( *e.c, e.destroyed, ScoreValue ).value
-  end if
+  component( *e.c, component( *e.c, e.author, Parent ).id, Score ) _
+    .value += component( *e.c, e.destroyed, ScoreValue ).value
 end sub
 
 type ShipRenderSystem extends ECSSystem
