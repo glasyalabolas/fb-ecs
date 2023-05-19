@@ -72,7 +72,7 @@ function ECSEntities.create() as ECSEntity
     _active( current ) = true
     _entities( current ).id = current
     
-    ECS.raiseEvent( EV_ENTITYCREATED, ECSEntityChangedEventArgs( current ), @this )
+    ECS.raiseEvent( EV_ENTITY_CREATED, ECSEntityChangedEventArgs( current ), @this )
     
     return( current )
   else
@@ -108,7 +108,7 @@ function ECSEntities.destroy( e as ECSEntity ) as ECSEntity
       _entityMap->remove( _entities( e ).name )
     end if
     
-    ECS.raiseEvent( EV_ENTITYDESTROYED, ECSEntityChangedEventArgs( e ), @this )
+    ECS.raiseEvent( EV_ENTITY_DESTROYED, ECSEntityChangedEventArgs( e ), @this )
     
     return( e )
   end if

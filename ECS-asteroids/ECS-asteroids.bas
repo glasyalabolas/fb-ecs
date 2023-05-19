@@ -69,15 +69,13 @@ Debug.print( "Creating entities..." )
 '' Create entities
 _DEBUG var player = newPlayer( myEntities, myComponents, "player" )
 _DEBUG newShip( myEntities, myComponents, myEntities.find( "player" ) )
-_DEBUG createAsteroids( myEntities, myComponents, 20 )
+_DEBUG createAsteroids( myEntities, myComponents, 15 )
 Debug.print( "Done." )
 
 dim as double dt, updateTime, updateTotal, renderTime, renderTotal, frameTime
 dim as ulongint count
 
 dim as Fb.Event ev
-
-Debug.print( "Player ship ID: " & myEntities.find( "playership" ) )
 
 do
   count += 1

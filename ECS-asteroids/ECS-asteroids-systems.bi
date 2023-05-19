@@ -2,7 +2,7 @@
 #define __ECS_ASTEROIDS_SYSTEMS__
 
 enum GAME_EVENTS
-  EV_GAME_ENTITYDESTROYED = 1000
+  EV_GAME_ENTITY_DESTROYED = 1000
 end enum
 
 type GameEntityDestroyedEventArgs extends ECSEventArgs
@@ -335,7 +335,7 @@ sub DestructibleSystem.process( dt as double = 0.0d )
         
         '' Did we destroy it?
         if( h[ a ].current < 0.0f ) then
-          ECS.raiseEvent( EV_GAME_ENTITYDESTROYED, _
+          ECS.raiseEvent( EV_GAME_ENTITY_DESTROYED, _
             GameEntityDestroyedEventArgs( a, prnt[ b ].id, myEntities, myComponents ), @this )
         end if
       end if 
@@ -390,14 +390,14 @@ end type
 constructor AsteroidDestroyedSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+  ECS.registerListener( EV_GAME_ENTITY_DESTROYED, toHandler( event_gameEntityDestroyed ), @this )
   
   require Position in p
   require Dimensions in d
 end constructor
 
 destructor AsteroidDestroyedSystem()
-  ECS.unregisterListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+  ECS.unregisterListener( EV_GAME_ENTITY_DESTROYED, toHandler( event_gameEntityDestroyed ), @this )
 end destructor
 
 sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
@@ -419,6 +419,10 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
   end if
 end sub
 
+function roundUp( x as long, n as long ) as long
+  return( int( ( x + n - 1 ) / ( n ) ) * ( ( n * x ) / ( abs( x ) + 0.00001 ) ) )
+end function
+
 type ScoreSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )
   declare destructor() override
@@ -433,20 +437,20 @@ end type
 constructor ScoreSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  ECS.registerListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+  ECS.registerListener( EV_GAME_ENTITY_DESTROYED, toHandler( event_gameEntityDestroyed ), @this )
   
   require Score in sc
 end constructor
 
 destructor ScoreSystem()
-  ECS.unregisterListener( EV_GAME_ENTITYDESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+  ECS.unregisterListener( EV_GAME_ENTITY_DESTROYED, toHandler( event_gameEntityDestroyed ), @this )
 end destructor
 
 sub ScoreSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as ScoreSystem ptr )
   
   component( *e.c, component( *e.c, e.author, Parent ).id, Score ) _
-    .value += component( *e.c, e.destroyed, ScoreValue ).value
+    .value += roundUp( component( *e.c, e.destroyed, ScoreValue ).value, 10 )
 end sub
 
 type ShipRenderSystem extends ECSSystem
