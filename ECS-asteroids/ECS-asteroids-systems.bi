@@ -4,6 +4,7 @@
 enum GAME_EVENTS
   EV_GAME_ENTITY_COLLIDED = 1000 
   EV_GAME_ENTITY_DESTROYED
+  EV_GAME_ENTITY_SHOT
 end enum
 
 type GameEntityDestroyedEventArgs extends ECSEventArgs
@@ -252,8 +253,8 @@ constructor CollidableSystem( e as ECSEntities, c as ECSComponents )
   require Dimensions in d
   require Collision in coll
   
-  h = myComponents[ "health" ]
   C_HEALTH = myComponents.getID( "health" )
+  h = myComponents[ C_HEALTH ]
 end constructor
 
 destructor CollidableSystem() : end destructor
@@ -355,7 +356,7 @@ sub DestructibleSystem.process( dt as double = 0.0d )
         
         '' Did we destroy it?
         if( h[ a ].current < 0.0f ) then
-          ECS.raiseEvent( EV_GAME_ENTITY_DESTROYED, _
+          ECS.raiseEvent( EV_GAME_ENTITY_SHOT, _
             GameEntityDestroyedEventArgs( a, prnt[ b ].id, myEntities, myComponents ), @this )
         end if
       end if 
@@ -391,6 +392,9 @@ sub HealthSystem.process( dt as double = 0.0d )
   next
   
   for each e as ECSEntity in destroyed
+    ECS.raiseEvent( EV_GAME_ENTITY_DESTROYED, _
+      GameEntityDestroyedEventArgs( e, -1, myEntities, myComponents ), @this )
+    
     myEntities.destroy( e )
   next
 end sub
@@ -453,13 +457,13 @@ end type
 constructor ScoreSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  ECS.registerListener( EV_GAME_ENTITY_DESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+  ECS.registerListener( EV_GAME_ENTITY_SHOT, toHandler( event_gameEntityDestroyed ), @this )
   
   require Score in sc
 end constructor
 
 destructor ScoreSystem()
-  ECS.unregisterListener( EV_GAME_ENTITY_DESTROYED, toHandler( event_gameEntityDestroyed ), @this )
+  ECS.unregisterListener( EV_GAME_ENTITY_SHOT, toHandler( event_gameEntityDestroyed ), @this )
 end destructor
 
 sub ScoreSystem.event_gameEntityDestroyed( _
