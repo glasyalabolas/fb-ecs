@@ -65,9 +65,13 @@ type Parent
   as ECSEntity id
 end type
 
+type Damaged
+  as boolean value
+end type
+
 type AsteroidRenderData
-  as long faces
   as Vec2 points( any )
+  as long faces
 end type
 
 #endif

@@ -67,17 +67,17 @@ sub rotate( o as Orientation, a as single )
 end sub
 
 sub shoot( e as ECSEntities, c as ECSComponents, _
-  m as Position, o as Orientation, ph as Physics, owner as ECSEntity, dt as double )
+  m as Position, o as Orientation, ph as Physics, parent as ECSEntity, dt as double )
   
   '' Choose a random direction arc
   var vel = o.dir.rotated( rad( rng( -3.0f, 3.0f ) ) ).normalize()
   
   '' Spawn bullet
-  newBullet( e, c, m.pos, vel, 500.0f, 2000.0f, owner )
+  newBullet( e, c, m.pos, vel, 500.0f, 2000.0f, parent )
   
   '' Add a little backwards acceleration to the shooting entity
   '' when firing.
-  accelerate( ph, -o.dir.normalized() * 400.0f * dt )
+  accelerate( ph, -o.dir.normalized() * 300.0f * dt )
 end sub
 
 type ControllableSystem extends ECSSystem
@@ -285,9 +285,9 @@ sub CollidableSystem.process( dt as double = 0.0d )
         p[ e1 ].pos += mtv * 0.5f
         p[ e2 ].pos -= mtv * 0.5f
         
-        '' Damage the entity in question. The damage taken will
-        '' scale depending on the velocity of the collision and
-        '' the size of the entities that collided.
+        '' Damage the entities in question if they have health. The damage taken will
+        '' scale depending on the velocity of the collision and the size of the entities
+        '' that collided.
         if( myComponents.hasComponent( e1, C_HEALTH ) ) then
           h[ e1 ].current -= vN.length * ( C_DAMAGE_SCALE * d[ e2 ].size )
         end if
@@ -313,6 +313,9 @@ type DestructibleSystem extends ECSSystem
     as Lifetime ptr lt
     as Health ptr h
     as Parent ptr prnt
+    as Damaged ptr dmg
+    
+    as ECSComponent T_BULLET, T_DESTRUCTIBLE
 end type
 
 constructor DestructibleSystem( e as ECSEntities, c as ECSComponents )
@@ -323,18 +326,22 @@ constructor DestructibleSystem( e as ECSEntities, c as ECSComponents )
   
   lt = has( "lifetime" )
   h = has( "health" )
+  dmg = has( "damaged" )
   
   require Position in p
   require Dimensions in d
   
   prnt = myComponents[ "parent" ]
+  
+  T_BULLET = myComponents.getID( "type:bullet" )
+  T_DESTRUCTIBLE = myComponents.getID( "trait:destructible" )
 end constructor
 
 destructor DestructibleSystem() : end destructor
 
 sub DestructibleSystem.process( dt as double = 0.0d )
-  filter e as ECSEntity in processed like contains( e, "type:bullet" ) in bullets
-  filter e as ECSEntity in processed like contains( e, "trait:destructible" ) in other
+  filter e as ECSEntity in processed like contains( e, T_BULLET ) in bullets
+  filter e as ECSEntity in processed like contains( e, T_DESTRUCTIBLE ) in other
   
   var abb = BoundingCircle(), bbb = BoundingCircle()
   
@@ -349,10 +356,13 @@ sub DestructibleSystem.process( dt as double = 0.0d )
       '' Make sure we don't damage ourselves with our own bullets
       if( a <> prnt[ b ].id andAlso bbb.overlapsWith( abb ) ) then
         '' Collided?
-        circle( abb.center.x, abb.center.y ), d[ a ].size, WHITE, , , , f
+        dmg[ a ].value = true
+        
+        circle( p[ b ].pos.x, p[ b ].pos.y ), 15, BLUE, , , , f
+        circle( p[ b ].pos.x, p[ b ].pos.y ), 10, WHITE, , , , f
         
         lt[ b ].current = 0.0f
-        h[ a ].current -= 90.0f
+        h[ a ].current -= 120.0f
         
         '' Did we destroy it?
         if( h[ a ].current < 0.0f ) then
@@ -409,6 +419,7 @@ type AsteroidDestroyedSystem extends ECSSystem
     
     as Position ptr p
     as Dimensions ptr d
+    as ECSComponent T_ASTEROID
 end type
 
 constructor AsteroidDestroyedSystem( e as ECSEntities, c as ECSComponents )
@@ -418,6 +429,8 @@ constructor AsteroidDestroyedSystem( e as ECSEntities, c as ECSComponents )
   
   require Position in p
   require Dimensions in d
+  
+  T_ASTEROID = myComponents.getID( "type:asteroid" )
 end constructor
 
 destructor AsteroidDestroyedSystem()
@@ -428,7 +441,7 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as AsteroidDestroyedSystem ptr )
   
   '' Was the destroyed entity an asteroid?
-  if( e.c->hasComponent( e.destroyed, "type:asteroid" ) ) then
+  if( e.c->hasComponent( e.destroyed, receiver->T_ASTEROID ) ) then
     var p = receiver->p[ e.destroyed ].pos
     var s = receiver->d[ e.destroyed ].size
     
@@ -524,6 +537,7 @@ type AsteroidRenderSystem extends ECSSystem
     as Dimensions ptr d
     as Appearance ptr a
     as AsteroidRenderData ptr ard
+    as Damaged ptr dmg
 end type
 
 constructor AsteroidRenderSystem( e as ECSEntities, c as ECSComponents )
@@ -535,23 +549,26 @@ constructor AsteroidRenderSystem( e as ECSEntities, c as ECSComponents )
   require Dimensions in d
   require Appearance in a
   require AsteroidRenderData in ard
+  require Damaged in dmg
 end constructor
 
 destructor AsteroidRenderSystem() : end destructor
 
 sub AsteroidRenderSystem.process( dt as double = 0.0d )
   for each e as ECSEntity in processed
+    dim as ulong c = iif( dmg[ e ].value, rgb( 255, 0, 0 ), rgb( 255, 255, 255 ) )
+    
     with p[ e ]
-      pset( .pos.x + ard[ e ].points( 0 ).x, .pos.y + ard[ e ].points( 0 ).y ), rgb( 255, 255, 255 )
+      pset( .pos.x + ard[ e ].points( 0 ).x, .pos.y + ard[ e ].points( 0 ).y ), c
       
       for i as integer = 1 to ard[ e ].faces - 1
-        line -( .pos.x + ard[ e ].points( i ).x, .pos.y + ard[ e ].points( i ).y ), rgb( 255, 255, 255 )
+        line -( .pos.x + ard[ e ].points( i ).x, .pos.y + ard[ e ].points( i ).y ), c
       next
       
-      line -( .pos.x + ard[ e ].points( 0 ).x, .pos.y + ard[ e ].points( 0 ).y ), rgb( 255, 255, 255 )
-      
-      'circle( .pos.x, .pos.y ), d[ e ].size, a[ e ].color, , , , f
+      line -( .pos.x + ard[ e ].points( 0 ).x, .pos.y + ard[ e ].points( 0 ).y ), c
     end with
+    
+    dmg[ e ].value = false
   next
 end sub
 
@@ -565,6 +582,9 @@ type BulletRenderSystem extends ECSSystem
     as Position ptr p
     as Physics ptr ph
     as Lifetime ptr lt
+    as Dimensions ptr d
+    
+    as long t
 end type
 
 constructor BulletRenderSystem( e as ECSEntities, c as ECSComponents )
@@ -575,18 +595,22 @@ constructor BulletRenderSystem( e as ECSEntities, c as ECSComponents )
   require Position in p
   require Physics in ph
   require Lifetime in lt
+  require Dimensions in d
 end constructor
 
 destructor BulletRenderSystem() : end destructor
 
 sub BulletRenderSystem.process( dt as double = 0.0d )
+  t += 10
+  
   for each e as ECSEntity in processed
     dim as long a = remap( lt[ e ].current, 0, lt[ e ].max, 0, 255 )
+    dim as long clr = t and 255
     
     with p[ e ]
-      circle( .pos.x, .pos.y ), 4, rgba( 0, 0, 255, a )
-      circle( .pos.x, .pos.y ), 3, rgba( 168, 228, 251, a )
-      circle( .pos.x, .pos.y ), 2, rgba( 255, 255, 255, a ), , , , f
+      circle( .pos.x, .pos.y ), d[ e ].size, rgba( 0, 0, 255, a )
+      circle( .pos.x, .pos.y ), d[ e ].size - 1, rgba( 168, 228, 251, a )
+      circle( .pos.x, .pos.y ), d[ e ].size - 2, rgba( t, t, t, a ), , , , f
     end with
   next
 end sub
