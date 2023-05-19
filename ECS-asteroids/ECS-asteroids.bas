@@ -68,7 +68,7 @@ Debug.print( "Done." )
 Debug.print( "Creating entities..." )
 '' Create entities
 _DEBUG var player = newPlayer( myEntities, myComponents, "player" )
-_DEBUG newShip( myEntities, myComponents, myEntities.find( "player" ) )
+_DEBUG var ship = newShip( myEntities, myComponents, player )
 _DEBUG createAsteroids( myEntities, myComponents, 15 )
 Debug.print( "Done." )
 
@@ -118,6 +118,7 @@ do
       
       ? "FPS: " & int( 1 / ( frameTime  / count ) )
       ? "Score: " & component( myComponents, player, Score ).value
+      ? "Health: " & component( myComponents, ship, Health ).current 
       ? "Update: " & int( 1 / ( updateTotal / count ) ) & " (" & int( ( updateTotal / frameTime ) * 100 ) & "%)"
       ? "Render: " & int( 1 / ( renderTotal / count ) ) & " (" & int( ( renderTotal / frameTime ) * 100 ) & "%)" 
     flip()
