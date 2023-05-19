@@ -60,7 +60,7 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
   
   with ADD_COMPONENT( c, Physics, asteroid )
     .vel = v
-    .maxSpeed = 300.0f
+    .maxSpeed = 150.0f
   end with
   
   ADD_COMPONENT( c, Dimensions, asteroid ).size = s
@@ -120,7 +120,7 @@ end function
 
 sub createAsteroids( e as ECSEntities, c as ECSComponents, count as long )
   for i as integer = 1 to count
-    dim as single size = rng( 8.0f, 40.0f )
+    dim as single size = rng( 16.0f, 80.0f )
     
     newAsteroid( e, c, rngWithin( Game.playArea ), _
       Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f ), size )

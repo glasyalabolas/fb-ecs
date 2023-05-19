@@ -8,10 +8,10 @@ type as long ECSEvent
 
 '' ECS events
 enum ECS_EVENT
-  EV_ENTITYCREATED = 1
-  EV_ENTITYDESTROYED
-  EV_COMPONENTADDED
-  EV_COMPONENTREMOVED
+  EV_ENTITY_CREATED = 1
+  EV_ENTITY_DESTROYED
+  EV_COMPONENT_ADDED
+  EV_COMPONENT_REMOVED
 end enum
 
 '' Just a base type to allow covariant types

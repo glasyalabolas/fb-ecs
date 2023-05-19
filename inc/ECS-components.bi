@@ -68,13 +68,13 @@ constructor ECSComponents( e as ECSEntities )
   
   _entities = @e
   
-  ECS.registerListener( EV_ENTITYDESTROYED, toHandler( ECSComponents.event_entityDestroyed ), @this )
+  ECS.registerListener( EV_ENTITY_DESTROYED, toHandler( ECSComponents.event_entityDestroyed ), @this )
   
   _hashTable = new Fb.HashTable()
 end constructor
 
 destructor ECSComponents()
-  ECS.unregisterListener( EV_ENTITYDESTROYED, toHandler( ECSComponents.event_entityDestroyed ), @this )
+  ECS.unregisterListener( EV_ENTITY_DESTROYED, toHandler( ECSComponents.event_entityDestroyed ), @this )
   
   erase( _components )
   erase( _componentMap )
@@ -197,7 +197,7 @@ function ECSComponents.addComponent( e as ECSEntity, c as ECSComponent ) as any 
     _componentTable( e, _componentCount( e ) ) = c
     _componentCount( e ) += 1
     
-    ECS.raiseEvent( EV_COMPONENTADDED, ECSComponentChangedEventArgs( e, c ), @this )
+    ECS.raiseEvent( EV_COMPONENT_ADDED, ECSComponentChangedEventArgs( e, c ), @this )
   end if
   
   return( cast( ubyte ptr, strptr( _components( c ).value ) ) + e * _components( c ).size )
@@ -219,7 +219,7 @@ function ECSComponents.removeComponent( e as ECSEntity, c as ECSComponent ) as b
       end if
     next
     
-    ECS.raiseEvent( EV_COMPONENTREMOVED, ECSComponentChangedEventArgs( e, c ), @this )
+    ECS.raiseEvent( EV_COMPONENT_REMOVED, ECSComponentChangedEventArgs( e, c ), @this )
     
     return( true )
   end if

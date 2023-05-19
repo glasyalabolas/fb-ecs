@@ -50,9 +50,9 @@ end type
 constructor ECSSystem() : end constructor
 
 constructor ECSSystem( e as ECSEntities, c as ECSComponents )
-  ECS.registerListener( EV_ENTITYDESTROYED, toHandler( ECSSystem.event_entityDestroyed ), @this )
-  ECS.registerListener( EV_COMPONENTADDED, toHandler( ECSSystem.event_componentAdded ), @this )
-  ECS.registerListener( EV_COMPONENTREMOVED, toHandler( ECSSystem.event_componentRemoved ), @this )
+  ECS.registerListener( EV_ENTITY_DESTROYED, toHandler( ECSSystem.event_entityDestroyed ), @this )
+  ECS.registerListener( EV_COMPONENT_ADDED, toHandler( ECSSystem.event_componentAdded ), @this )
+  ECS.registerListener( EV_COMPONENT_REMOVED, toHandler( ECSSystem.event_componentRemoved ), @this )
   
   redim _required( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
   redim _optional( 0 to ECS_MAX_COMPONENTS_PER_ENTITY - 1 )
@@ -64,9 +64,9 @@ constructor ECSSystem( e as ECSEntities, c as ECSComponents )
 end constructor
 
 destructor ECSSystem()
-  ECS.unregisterListener( EV_ENTITYDESTROYED, toHandler( ECSSystem.event_entityDestroyed ), @this )
-  ECS.unregisterListener( EV_COMPONENTADDED, toHandler( ECSSystem.event_componentAdded ), @this )
-  ECS.unregisterListener( EV_COMPONENTREMOVED, toHandler( ECSSystem.event_componentRemoved ), @this )
+  ECS.unregisterListener( EV_ENTITY_DESTROYED, toHandler( ECSSystem.event_entityDestroyed ), @this )
+  ECS.unregisterListener( EV_COMPONENT_ADDED, toHandler( ECSSystem.event_componentAdded ), @this )
+  ECS.unregisterListener( EV_COMPONENT_REMOVED, toHandler( ECSSystem.event_componentRemoved ), @this )
   
   erase( _required )
   erase( _optional )
