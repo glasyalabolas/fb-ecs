@@ -53,6 +53,26 @@ end namespace
 #include once "fbg-vec2.bi"
 #include once "fbg-polar.bi"
 
+#define BT_R( c ) cast( ubyte ptr, @c )[ 2 ]
+#define BT_G( c ) cast( ubyte ptr, @c )[ 1 ]
+#define BT_B( c ) cast( ubyte ptr, @c )[ 0 ]
+#define BT_A( c ) cast( ubyte ptr, @c )[ 3 ]
+
+#macro RGBAlerp( t, c0, c1 )
+  rgba( _
+    ( ( ( BT_R( c1 ) - BT_R( c0 ) ) * t ) shr 8 ) + BT_R( c0 ), _
+    ( ( ( BT_G( c1 ) - BT_G( c0 ) ) * t ) shr 8 ) + BT_G( c0 ), _
+    ( ( ( BT_B( c1 ) - BT_B( c0 ) ) * t ) shr 8 ) + BT_B( c0 ), _
+    ( ( ( BT_A( c1 ) - BT_A( c0 ) ) * t ) shr 8 ) + BT_A( c0 ) )
+#endmacro
+
+#macro RGBlerp( t, c0, c1 )
+  rgb( _
+    ( ( ( BT_R( c1 ) - BT_R( c0 ) ) * t ) shr 8 ) + BT_R( c0 ), _
+    ( ( ( BT_G( c1 ) - BT_G( c0 ) ) * t ) shr 8 ) + BT_G( c0 ), _
+    ( ( ( BT_B( c1 ) - BT_B( c0 ) ) * t ) shr 8 ) + BT_B( c0 ) )
+#endmacro
+
 namespace __FBG_NS__ 
   private function lerp overload( t as single, p0 as Vec2, p1 as Vec2 ) as Vec2
     return( ( p1 - p0 ) * t + p0 )

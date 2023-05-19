@@ -585,6 +585,7 @@ type BulletRenderSystem extends ECSSystem
     as Dimensions ptr d
     
     as long t
+    as ulong c0 = rgb( 255, 0, 0 ), c1 = rgb( 0, 0, 255 )
 end type
 
 constructor BulletRenderSystem( e as ECSEntities, c as ECSComponents )
@@ -608,7 +609,7 @@ sub BulletRenderSystem.process( dt as double = 0.0d )
     dim as long clr = t and 255
     
     with p[ e ]
-      circle( .pos.x, .pos.y ), d[ e ].size, rgba( 0, 0, 255, a )
+      circle( .pos.x, .pos.y ), d[ e ].size, RGBlerp( t, c0, c1 )
       circle( .pos.x, .pos.y ), d[ e ].size - 1, rgba( 168, 228, 251, a )
       circle( .pos.x, .pos.y ), d[ e ].size - 2, rgba( t, t, t, a ), , , , f
     end with
