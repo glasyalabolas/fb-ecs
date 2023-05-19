@@ -32,7 +32,7 @@ function newShip( e as ECSEntities, c as ECSComponents, parent as ECSEntity ) as
   end with
   
   with ADD_COMPONENT( c, Health, pship )
-    .max = 1000.0f
+    .max = 400.0f
     .current = .max
   end with
   
@@ -67,7 +67,7 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
   ADD_COMPONENT( c, Appearance, asteroid ).color = RED
   
   with ADD_COMPONENT( c, Health, asteroid )
-    .max = 5.0f * s
+    .max = 20.0f * s
     .current = .max
   end with
   

@@ -2,7 +2,8 @@
 #define __ECS_ASTEROIDS_SYSTEMS__
 
 enum GAME_EVENTS
-  EV_GAME_ENTITY_DESTROYED = 1000
+  EV_GAME_ENTITY_COLLIDED = 1000 
+  EV_GAME_ENTITY_DESTROYED
 end enum
 
 type GameEntityDestroyedEventArgs extends ECSEventArgs
@@ -239,6 +240,8 @@ type CollidableSystem extends ECSSystem
     as Physics ptr ph
     as Dimensions ptr d
     as Collision ptr coll
+    as Health ptr h
+    as ECSComponent C_HEALTH
 end type
 
 constructor CollidableSystem( e as ECSEntities, c as ECSComponents )
@@ -248,6 +251,9 @@ constructor CollidableSystem( e as ECSEntities, c as ECSComponents )
   require Physics in ph
   require Dimensions in d
   require Collision in coll
+  
+  h = myComponents[ "health" ]
+  C_HEALTH = myComponents.getID( "health" )
 end constructor
 
 destructor CollidableSystem() : end destructor
@@ -269,11 +275,25 @@ sub CollidableSystem.process( dt as double = 0.0d )
       a2.radius = coll[ e2 ].radius
       
       if( a1.overlapsWith( a2 ) ) then
+        '' Compute collision normal
+        var vN = getCollisionNormal( ( a1.center - a2.center ), ph[ e1 ].vel, ph[ e2 ].vel )
+        '' Compute minimum translation vector
         var mtv = collided( a1, a2, ph[ e1 ].vel, ph[ e2 ].vel )
         
         '' Adjust the position of the entities
         p[ e1 ].pos += mtv * 0.5f
         p[ e2 ].pos -= mtv * 0.5f
+        
+        '' Damage the entity in question. The damage taken will
+        '' scale depending on the velocity of the collision and
+        '' the size of the entities that collided.
+        if( myComponents.hasComponent( e1, C_HEALTH ) ) then
+          h[ e1 ].current -= vN.length * ( C_DAMAGE_SCALE * d[ e2 ].size )
+        end if
+        
+        if( myComponents.hasComponent( e2, C_HEALTH ) ) then
+          h[ e2 ].current -= vN.length * ( C_DAMAGE_SCALE * d[ e1 ].size )
+        end if
       end if
     next
   next
@@ -331,7 +351,7 @@ sub DestructibleSystem.process( dt as double = 0.0d )
         circle( abb.center.x, abb.center.y ), d[ a ].size, WHITE, , , , f
         
         lt[ b ].current = 0.0f
-        h[ a ].current -= 30.0f
+        h[ a ].current -= 90.0f
         
         '' Did we destroy it?
         if( h[ a ].current < 0.0f ) then
@@ -418,10 +438,6 @@ sub AsteroidDestroyedSystem.event_gameEntityDestroyed( _
     end if
   end if
 end sub
-
-function roundUp( x as long, n as long ) as long
-  return( int( ( x + n - 1 ) / ( n ) ) * ( ( n * x ) / ( abs( x ) + 0.00001 ) ) )
-end function
 
 type ScoreSystem extends ECSSystem
   declare constructor( as ECSEntities, as ECSComponents )

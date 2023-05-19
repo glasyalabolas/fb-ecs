@@ -44,6 +44,10 @@ namespace __FBG_NS__
     
     return( ( x - start1 ) * ( end2 - start2 ) / ( end1 - start1 ) + start2 )
   end function
+  
+  private function roundUp( x as long, n as long ) as long
+    return( int( ( x + n - 1 ) / ( n ) ) * ( ( n * x ) / ( abs( x ) + 0.00001 ) ) )
+  end function
 end namespace
 
 #include once "fbg-vec2.bi"
