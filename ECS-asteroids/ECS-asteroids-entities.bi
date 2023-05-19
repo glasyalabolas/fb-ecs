@@ -60,7 +60,7 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
   
   with ADD_COMPONENT( c, Physics, asteroid )
     .vel = v
-    .maxSpeed = 150.0f
+    .maxSpeed = 200.0f
   end with
   
   ADD_COMPONENT( c, Dimensions, asteroid ).size = s
@@ -86,6 +86,7 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
     next
   end with
   
+  c.addComponent( asteroid, "damaged" )
   c.addComponent( asteroid, "type:asteroid" )
   c.addComponent( asteroid, "trait:destructible" )
   
@@ -104,7 +105,7 @@ function newBullet( e as ECSEntities, c as ECSComponents, _
     .maxSpeed = 500.0f
   end with
   
-  ADD_COMPONENT( c, Dimensions, bullet ).size = 4.0f
+  ADD_COMPONENT( c, Dimensions, bullet ).size = 5.0f
   
   with ADD_COMPONENT( c, Lifetime, bullet )
     .max = lt

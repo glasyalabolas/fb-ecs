@@ -23,6 +23,7 @@ type ECSSystem extends Object
     declare function requires( as string ) as any ptr
     declare function has( as string ) as any ptr
     declare function contains( as ECSEntity, as string ) as boolean
+    declare function contains( as ECSEntity, as ECSComponent ) as boolean
     
   private:
     declare static sub event_entityDestroyed( _
@@ -115,6 +116,10 @@ function ECSSystem.has( c as string ) as any ptr
   _optionalCount += 1
   
   return( ( *_components )[ id ] )
+end function
+
+function ECSSystem.contains( e as ECSEntity, c as ECSComponent ) as boolean
+  return( _components->hasComponent( e, c ) )
 end function
 
 function ECSSystem.contains( e as ECSEntity, c as string ) as boolean

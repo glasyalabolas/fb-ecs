@@ -68,6 +68,7 @@ static as BoundingBox Game.playArea = BoundingBox()
 sub Game.init( xRes as long, yRes as long )
   screenRes( xRes, yRes, 32, 2, Fb.GFX_ALPHA_PRIMITIVES )
   screenSet( 0, 1 )
+  width xRes \ 8, yRes \ 16
   
   randomize()
   

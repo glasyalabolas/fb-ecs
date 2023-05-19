@@ -33,6 +33,7 @@ Debug.print( "Registering components..." )
   register Collision in myComponents
   register Parent in myComponents
   register AsteroidRenderData in myComponents
+  register Damaged in myComponents
   
   trait "type:ship" in myComponents
   trait "type:asteroid" in myComponents
@@ -60,9 +61,6 @@ _DEBUG var s_destr = DestructibleSystem( myEntities, myComponents )
 _DEBUG var s_health = HealthSystem( myEntities, myComponents )
 _DEBUG var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
 _DEBUG var s_score = ScoreSystem( myEntities, myComponents )
-
-var s_move2 = MovableSystem( myEntities, myComponents )
-
 Debug.print( "Done." )
 
 Debug.print( "Creating entities..." )
