@@ -1,6 +1,7 @@
 #ifndef __ECS_ASTEROIDS_SYSTEMS__
 #define __ECS_ASTEROIDS_SYSTEMS__
 
+'' Some event IDs for the game needs
 enum GAME_EVENTS
   EV_GAME_ENTITY_COLLIDED = 1000 
   EV_GAME_ENTITY_DESTROYED
@@ -19,6 +20,21 @@ constructor GameEntityDestroyedEventArgs( d as ECSEntity, a as ECSEntity, ent as
   destroyed = d : author = a : e = @ent : c = @com
 end constructor
 
+/'
+  Here is where the logic of the game should happen: systems.
+  
+  Below are various samples of how you can implement different systems that can do a variety
+  of things, using helper functions, etc.
+  
+  Systems derive from a base class that can raise and listen to events (so they can communicate
+  with other systems or the main program). All events are SYNCHRONOUS, meaning that they will
+  execute as soon as they are raised.
+  
+  The systems themselves declare what entities they are interested in processing in their 
+  constructors, using various methods described on the comments below, so all you really have 
+  to do is add/remove components to entities, and systems will update themselves automatically
+  and start processing the appropriate entities.
+'/
 sub move( m as Position, p as Physics, dt as double )
   if( p.vel.lengthSq() > p.maxSpeed ^ 2 ) then
     p.vel = p.vel.normalized() * p.maxSpeed
@@ -39,8 +55,12 @@ type MovableSystem extends ECSSystem
 end type
 
 constructor MovableSystem( e as ECSEntities, c as ECSComponents )
+  '' The base constructor should always be called, to pass them a reference to the
+  '' entity and component instances relevant to this system.
   base( e, c )
   
+  '' 'Require' means that the system needs the component present to start processing
+  '' the entity. You then get a pointer to the relevant component array.
   require Position in p
   require Physics in ph
 end constructor
@@ -52,9 +72,7 @@ sub MovableSystem.process( dt as double = 0.0d )
     move( p[ e ], ph[ e ], dt )
     
     '' Wrap around play area
-    p[ e ].pos = wrapV( p[ e ].pos, _
-      Game.playArea.x, Game.playArea.y, _
-      Game.playArea.width, Game.playArea.height )
+    p[ e ].pos = wrapV( p[ e ].pos, Game.playArea.x, Game.playArea.y, Game.playArea.width, Game.playArea.height )
   next
 end sub
 
@@ -321,8 +339,8 @@ end type
 constructor DestructibleSystem( e as ECSEntities, c as ECSComponents )
   base( e, c )
   
-  has( "trait:destructible" )
-  has( "type:bullet" )
+  has "trait:destructible"
+  has "type:bullet"
   
   lt = has( "lifetime" )
   h = has( "health" )
@@ -340,6 +358,7 @@ end constructor
 destructor DestructibleSystem() : end destructor
 
 sub DestructibleSystem.process( dt as double = 0.0d )
+  '' We only want to process bullets and anything that can be damaged
   filter e as ECSEntity in processed like contains( e, T_BULLET ) in bullets
   filter e as ECSEntity in processed like contains( e, T_DESTRUCTIBLE ) in other
   
@@ -482,6 +501,7 @@ end destructor
 sub ScoreSystem.event_gameEntityDestroyed( _
   sender as any ptr, e as GameEntityDestroyedEventArgs, receiver as ScoreSystem ptr )
   
+  '' TODO: wrap some macro up to simply this syntax...
   component( *e.c, component( *e.c, e.author, Parent ).id, Score ) _
     .value += roundUp( component( *e.c, e.destroyed, ScoreValue ).value, 10 )
 end sub

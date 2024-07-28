@@ -1,6 +1,13 @@
 #ifndef __ECS_ASTEROIDS_ENTITIES__
 #define __ECS_ASTEROIDS_ENTITIES__
 
+/'
+  These functions just create 'default' entities.
+  In a sense, these are the archetypes of the entities you'll use.
+  
+  TODO: implement a mechanism to copy components, so you can cache and reuse these
+    archetypes if you want.
+'/
 function newShip( e as ECSEntities, c as ECSComponents, parent as ECSEntity ) as ECSEntity
   var pship = e.create( "playership" )
   
@@ -39,6 +46,7 @@ function newShip( e as ECSEntities, c as ECSComponents, parent as ECSEntity ) as
   ADD_COMPONENT( c, Collision, pship ).radius = 5.0f
   ADD_COMPONENT( c, Parent, pship ).id = parent
   
+  '' And this is how you add traits to the entities (managed by the component system)
   c.addComponent( pship, "type:ship" )
   c.addComponent( pship, "trait:destructible" )
   
@@ -75,7 +83,6 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
   ADD_COMPONENT( c, ScoreValue, asteroid ).value = 500 / s
   
   with ADD_COMPONENT( c, AsteroidRenderData, asteroid )
-    '.radius = s
     .faces = rng( 8, 14 )
     redim .points( 0 to .faces - 1 )
     
@@ -86,7 +93,10 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
     next
   end with
   
+  '' You can add a simple component (like a boolean) like this if you don't need to
+  '' initialize it.
   c.addComponent( asteroid, "damaged" )
+  
   c.addComponent( asteroid, "type:asteroid" )
   c.addComponent( asteroid, "trait:destructible" )
   
@@ -118,14 +128,5 @@ function newBullet( e as ECSEntities, c as ECSComponents, _
   
   return( bullet )
 end function
-
-sub createAsteroids( e as ECSEntities, c as ECSComponents, count as long )
-  for i as integer = 1 to count
-    dim as single size = rng( 16.0f, 80.0f )
-    
-    newAsteroid( e, c, rngWithin( Game.playArea ), _
-      Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f ), size )
-  next
-end sub
 
 #endif
