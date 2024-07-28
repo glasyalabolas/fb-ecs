@@ -75,7 +75,6 @@ function newAsteroid( e as ECSEntities, c as ECSComponents, p as Vec2, v as Vec2
   ADD_COMPONENT( c, ScoreValue, asteroid ).value = 500 / s
   
   with ADD_COMPONENT( c, AsteroidRenderData, asteroid )
-    '.radius = s
     .faces = rng( 8, 14 )
     redim .points( 0 to .faces - 1 )
     
