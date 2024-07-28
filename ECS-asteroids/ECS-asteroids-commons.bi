@@ -55,6 +55,8 @@ sub renderTriangle( _
   next
 end sub
 
+'' Contains the global context for the game.
+'' Implemented as a monostate for now (probably a TODO)
 type Game extends Object
   declare static sub init( as long, as long )
   

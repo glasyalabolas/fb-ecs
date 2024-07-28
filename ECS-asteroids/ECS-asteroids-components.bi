@@ -1,6 +1,10 @@
 #ifndef __ECS_ASTEROIDS_COMPONENTS_
 #define __ECS_ASTEROIDS_COMPONENTS_
 
+/'
+  Components are just POD structures. There's no restrictions as to whether they need
+  to be or not, so you might have components with methods if you find a use for them.
+'/
 type Position
   as Vec2 pos
 end type
