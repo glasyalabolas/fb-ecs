@@ -7,7 +7,7 @@ namespace __FBG_NS__
   type GameLoop extends Object
     public:
       declare constructor()
-      declare constructor( as double, as double )
+      declare constructor(as double, as double)
       declare virtual destructor()
       
       declare property ticksPerSecond() as double
@@ -17,8 +17,8 @@ namespace __FBG_NS__
       declare sub run()
       
     private:
-      declare abstract sub onUpdate( as double )
-      declare abstract sub onRender( as double )
+      declare abstract sub onUpdate(as double)
+      declare abstract sub onRender(as double)
       
       declare function getTickCount() as double
       
@@ -30,10 +30,10 @@ namespace __FBG_NS__
   end type
   
   constructor GameLoop()
-    constructor( 60.0, 0.1 )
+    constructor(60.0, 0.1)
   end constructor
   
-  constructor GameLoop( tps as double, dT as double )
+  constructor GameLoop(tps as double, dT as double)
     _ticksPerSecond = tps
     _deltaTime = dT
     _skipTicks = 1000.0d / _ticksPerSecond
@@ -42,15 +42,15 @@ namespace __FBG_NS__
   destructor GameLoop() : end destructor
   
   property GameLoop.ticksPerSecond() as double
-    return( _ticksPerSecond )
+    return _ticksPerSecond
   end property
   
   property GameLoop.deltaTime() as double
-    return( _deltaTime )
+    return _deltaTime
   end property
   
   function GameLoop.getTickCount() as double
-    return( timer() * 1000.0d )
+    return timer() * 1000.0d
   end function
   
   sub GameLoop.start()
@@ -58,18 +58,18 @@ namespace __FBG_NS__
   end sub
   
   sub GameLoop.run()
-    do while( getTickCount() > _nextTick )
+    do while getTickCount() > _nextTick
       '' Call the delegate in charge of updating
-      onUpdate( _deltaTime )
+      onUpdate(_deltaTime)
       
       _nextTick += _skipTicks
     loop
     
     '' Render
-    onRender( ( getTickCount() + _skipTicks - _nextTick ) / _skipTicks )
+    onRender((getTickCount() + _skipTicks - _nextTick) / _skipTicks)
     
     '' Yield a little time to other threads
-    sleep( 1, 1 )
+    sleep(1, 1)
   end sub
 end namespace
 

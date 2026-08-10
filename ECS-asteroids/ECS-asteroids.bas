@@ -12,11 +12,11 @@ using FbGame
 
 Debug.toConsole()
 
-Debug.print( "Creating entities and components..." )
-  var myEntities = ECSEntities(), myComponents = ECSComponents( myEntities )
-Debug.print( "Done." )
+Debug.print("Creating entities and components...")
+  var myEntities = ECSEntities(), myComponents = ECSComponents(myEntities)
+Debug.print("Done.")
 
-Debug.print( "Registering components..." )
+Debug.print("Registering components...")
   register Position in myComponents
   register Orientation in myComponents
   register Physics in myComponents
@@ -47,78 +47,78 @@ Debug.print( "Registering components..." )
   trait "type:asteroid" in myComponents
   trait "type:bullet" in myComponents
   trait "trait:destructible" in myComponents
-Debug.print( "Done" )
+Debug.print("Done")
 
-Debug.print( myComponents.getDebugInfo() )
+Debug.print(myComponents.getDebugInfo())
 
 '' Just a helper function to create asteroids in the playfield
-sub createAsteroids( e as ECSEntities, c as ECSComponents, count as long )
+sub createAsteroids(e as ECSEntities, c as ECSComponents, count as long)
   for i as integer = 1 to count
-    dim as single size = rng( 16.0f, 80.0f )
+    dim as single size = rng(16.0f, 80.0f)
     
-    newAsteroid( e, c, rngWithin( Game.playArea ), _
-      Vec2( rng( -1.0f, 1.0f ), rng( -1.0f, 1.0f ) ) * ( 200.0f - size * 5.0f ), size )
+    newAsteroid(e, c, rngWithin(Game.playArea), Vec2(rng(-1.0f, 1.0f), rng(-1.0f, 1.0f)) * (200.0f - size * 5.0f), size)
   next
 end sub
 
 /'
   Main code
 '/
-Game.init( 800, 600 )
+Game.init(800, 600)
 
 '' Instantiate systems before creating entities
-Debug.print( "Instantiating systems..." )
-  _DEBUG var s_lifetime = LifetimeSystem( myEntities, myComponents )
-  _DEBUG var s_renderShip = ShipRenderSystem( myEntities, myComponents )
-  _DEBUG var s_renderAsteroids = AsteroidRenderSystem( myEntities, myComponents )
-  _DEBUG var s_renderBullets = BulletRenderSystem( myEntities, myComponents )
-  _DEBUG var s_move = MovableSystem( myEntities, myComponents )
-  _DEBUG var s_control = ControllableSystem( myEntities, myComponents )
-  _DEBUG var s_collision = CollidableSystem( myEntities, myComponents )
-  _DEBUG var s_destr = DestructibleSystem( myEntities, myComponents )
-  _DEBUG var s_health = HealthSystem( myEntities, myComponents )
-  _DEBUG var s_destroyAsteroid = AsteroidDestroyedSystem( myEntities, myComponents )
-  _DEBUG var s_score = ScoreSystem( myEntities, myComponents )
-Debug.print( "Done." )
+Debug.print("Instantiating systems...")
+  _DEBUG var s_lifetime = LifetimeSystem(myEntities, myComponents)
+  _DEBUG var s_renderShip = ShipRenderSystem(myEntities, myComponents)
+  _DEBUG var s_renderAsteroids = AsteroidRenderSystem(myEntities, myComponents)
+  _DEBUG var s_renderBullets = BulletRenderSystem(myEntities, myComponents)
+  _DEBUG var s_move = MovableSystem(myEntities, myComponents)
+  _DEBUG var s_control = ControllableSystem(myEntities, myComponents)
+  _DEBUG var s_collision = CollidableSystem(myEntities, myComponents)
+  _DEBUG var s_destr = DestructibleSystem(myEntities, myComponents)
+  _DEBUG var s_health = HealthSystem(myEntities, myComponents)
+  _DEBUG var s_destroyAsteroid = AsteroidDestroyedSystem(myEntities, myComponents)
+  _DEBUG var s_score = ScoreSystem(myEntities, myComponents)
+Debug.print("Done.")
 
 '' Create entities
-Debug.print( "Creating entities..." )
-  _DEBUG var player = newPlayer( myEntities, myComponents, "player" )
-  _DEBUG var ship = newShip( myEntities, myComponents, player )
-  _DEBUG createAsteroids( myEntities, myComponents, 15 )
-Debug.print( "Done." )
+Debug.print("Creating entities...")
+  _DEBUG var player = newPlayer(myEntities, myComponents, "player")
+  _DEBUG var ship = newShip(myEntities, myComponents, player)
+  _DEBUG createAsteroids(myEntities, myComponents, 15)
+Debug.print("Done.")
 
 dim as double dt, updateTime, updateTotal, renderTime, renderTotal, frameTime
 dim as ulongint count
 
 dim as Fb.Event ev
 
+'' Player ship entity
+var p = myEntities.find("playership")
+
 do
   count += 1
   frameTime = updateTotal + renderTotal
   
-  do while( screenEvent( @ev ) )
-    Game.keyboard.onEvent( @ev )
+  do while screenEvent(@ev)
+    Game.keyboard.onEvent(@ev)
   loop
   
-  if( Game.keyboard.pressed( Fb.SC_R ) ) then
-    var p = myEntities.find( "playership" )
-    myComponents.removeComponent( p, "controls" )
+  if Game.keyboard.pressed(Fb.SC_R) then
+    myComponents.removeComponent(p, "controls")
   end if
   
-  if( Game.keyboard.pressed( Fb.SC_A ) ) then
-    var p = myEntities.find( "playership" )
-    myComponents.addComponent( p, "controls" )
+  if Game.keyboard.pressed(Fb.SC_A) then
+    myComponents.addComponent(p, "controls")
   end if
   
   updateTime = timer()
   
-  '' Update
-  s_lifetime.process( dt )
-  s_health.process( dt )
-  s_control.process( dt )
-  s_move.process( dt )
-  s_collision.process( dt )
+  '' Update. Process all systems
+  s_lifetime.process(dt)
+  s_health.process(dt)
+  s_control.process(dt)
+  s_move.process(dt)
+  s_collision.process(dt)
   
   updateTime = timer() - updateTime
   updateTotal += updateTime
@@ -132,16 +132,16 @@ do
       s_renderAsteroids.process()
       s_destr.process()
       
-      ? "FPS: " & int( 1 / ( frameTime  / count ) )
-      ? "Score: " & component( myComponents, player, Score ).value
-      ? "Health: " & component( myComponents, ship, Health ).current 
-      ? "Update: " & int( 1 / ( updateTotal / count ) ) & " (" & int( ( updateTotal / frameTime ) * 100 ) & "%)"
-      ? "Render: " & int( 1 / ( renderTotal / count ) ) & " (" & int( ( renderTotal / frameTime ) * 100 ) & "%)" 
+      ? "FPS: " & int(1 / (frameTime  / count))
+      ? "Score: " & component(myComponents, player, Score).value
+      ? "Health: " & component(myComponents, ship, Health).current 
+      ? "Update: " & int(1 / (updateTotal / count)) & " (" & int((updateTotal / frameTime) * 100) & "%)"
+      ? "Render: " & int(1 / (renderTotal / count)) & " (" & int((renderTotal / frameTime) * 100) & "%)" 
     flip()
     
     renderTime = timer() - renderTime
     renderTotal += renderTime
     
-    sleep( 1, 1 )
+    sleep(1, 1)
   dt = timer() - dt
-loop until( Game.keyboard.pressed( Fb.SC_ESCAPE ) )
+loop until Game.keyboard.pressed(Fb.SC_ESCAPE)

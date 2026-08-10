@@ -74,7 +74,7 @@ type Damaged
 end type
 
 type AsteroidRenderData
-  as Vec2 points( any )
+  as Vec2 points(any)
   as long faces
 end type
 

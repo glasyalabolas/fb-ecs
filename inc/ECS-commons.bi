@@ -9,108 +9,105 @@ type as long ECSEntity
 type as long ECSComponent
 type as string ECS_DATA_BUFFER
 
-function hash_32( x as ulong ) as ulong
-  x = ( ( x shr 16 ) xor x ) * &h45d9f3b
-  x = ( ( x shr 16 ) xor x ) * &h45d9f3b
-  return( ( x shr 16 ) xor x )
+function hash_32(x as ulong) as ulong
+  x = ((x shr 16) xor x) * &h45d9f3b
+  x = ((x shr 16) xor x) * &h45d9f3b
+  return (x shr 16) xor x
 end function
 
-function hash_64( x as ulongint ) as ulongint
-  x = ( x xor ( x shr 30 ) ) * &hbf58476d1ce4e5b9ull
-  x = ( x xor ( x shr 27 ) ) * &h94d049bb133111ebull
-  return( ( x shr 31 ) xor x )
+function hash_64(x as ulongint) as ulongint
+  x = (x xor (x shr 30)) * &hbf58476d1ce4e5b9ull
+  x = (x xor (x shr 27)) * &h94d049bb133111ebull
+  return (x shr 31) xor x
 end function
 
-function hashstr( x as string ) as ulong
-  #define ROT( a, b ) ( ( a shl b ) or ( a shr ( 32 - b ) ) )
+function hashstr(x as string) as ulong
+  #define ROT(a, b) ((a shl b) or (a shr (32 - b)))
   
-  dim as zstring ptr strp = strPtr( x )
-  dim as integer _
-    leng = len( x ), _
-    extra_bytes = leng and 3
+  dim as zstring ptr strp = strPtr(x)
+  dim as integer leng = len(x), extra_bytes = leng and 3
   
   leng shr= 2
   
   dim as ulong h = &hdeadbeef
   
-  do while( leng )
-    h += *cast( ulong ptr, strp )
+  do while leng
+    h += *cptr(ulong ptr, strp)
     strp += 4
-    h = ( h shl 5 ) - h
-    h xor= ROT( h, 19 )
+    h = (h shl 5) - h
+    h xor= ROT(h, 19)
     leng -= 1
   loop
   
-  if( extra_bytes ) then
-    select case as const( extra_bytes )
+  if extra_bytes then
+    select case as const extra_bytes
       case 3
-        h xor= *cast( ulong ptr, strp ) and &hffffff
+        h xor= *cptr(ulong ptr, strp) and &hffffff
       case 2
-        h xor= *cast( ulong ptr, strp ) and &hffff
+        h xor= *cptr(ulong ptr, strp) and &hffff
       case 1
         h xor= *strp
     end select
     
-    h = ( h shl 5 ) - h
-    h xor= rot( h, 19 )
+    h = (h shl 5) - h
+    h xor= ROT(h, 19)
   end if
   
-  h += ROT( h, 2 )
-  h xor= ROT( h, 27 )
-  h += ROT( h, 16 )
+  h += ROT(h, 2)
+  h xor= ROT(h, 27)
+  h += ROT(h, 16)
   
-  return( h )
+  return h
 end function
 
-#macro _DEBUG?( _n_ )
-  #if defined( ECS_DEBUG_ON )
-    Debug.print( #_n_ )
+#macro _DEBUG?(_n_)
+  #if defined(ECS_DEBUG_ON)
+    Debug.print(#_n_)
   #endif
   _n_
 #endmacro
 
 '' Experimental syntax
-#macro require?( _r_, _v_ )
-  _v_ = requires( #_r_ )
+#macro require?(_r_, _v_)
+  _v_ = requires(#_r_)
 #endmacro
 
-#macro filter?( _v_, _p_, _f_, _r_ )
-var _r_ = UnorderedList( _p_.count )
+#macro filter?(_v_, _p_, _f_, _r_)
+var _r_ = UnorderedList(_p_.count)
 
 for each _v_ in _p_
-  if( _f_ ) then
-    _r_.add( e )
+  if _f_ then
+    _r_.add(e)
   end if
 next
 #endmacro
 
 #define like ,
+#define in ,
 
 '#macro has?( _t_ )
 '  require( #_t_ )
 '#endmacro
 
-#define in ,
-
-#macro each?( _e_, _p_ )
+#macro each?(_e_, _p_)
   i as integer = 0 to _p_.count - 1
-  dim _e_ = _p_[ i ]
+  dim _e_ = _p_[i]
 #endmacro
 
-#macro register?( _c_, _cmp_ )
-  _cmp_.registerComponent( #_c_, sizeof( _c_ ) )
+#macro register?(_c_, _cmp_)
+  _cmp_.registerComponent(#_c_, sizeof(_c_))
 #endmacro
 
-#macro trait?( _c_, _cmp_ )
-  _cmp_.registerComponent( _c_ )
+#macro trait?(_c_, _cmp_)
+  _cmp_.registerComponent(_c_)
 #endmacro
 
-#macro component( _mc_, _e_, _c_ )
-  ( cast( _c_ ptr, ( _mc_ )[ #_c_ ] )[ _e_ ] )
+#macro component(_mc_, _e_, _c_)
+  (cptr(_c_ ptr, (_mc_)[#_c_])[_e_])
 #endmacro
 
-#macro ADD_COMPONENT?( _mc_, _c_, _e_ )
-  ( *cast( _c_ ptr, _mc_.addComponent( _e_, #_c_ ) ) )
+#macro ADD_COMPONENT?(_mc_, _c_, _e_)
+  (*cptr(_c_ ptr, _mc_.addComponent(_e_, #_c_)))
 #endmacro
 
 #endif
